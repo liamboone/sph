@@ -9,6 +9,7 @@
 #include "../freeglut/include/GL/glut.h"
 #include "../glm/glm.hpp"
 
+#include "fluid.h"
 #include "display.h"
 
 using namespace glm;
@@ -25,9 +26,11 @@ void mouseDrag_cb(int, int);
 void mouseClick_cb(int, int, int, int);
 
 Display * display;
+Fluid theFluid;
 
 int main(int argc, char** argv) 
 {
+	
 	//GLUT stuff and making a window
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
@@ -35,6 +38,7 @@ int main(int argc, char** argv)
 	glutCreateWindow("SPH");
 
 	display = new Display();
+	display->setFluids(&theFluid); 
 
 	//Setup Callbacks
 	glutDisplayFunc(display_cb);
@@ -98,6 +102,7 @@ void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	theFluid.Update(0.05, glm::vec3(0, -9.8, 0)); 
 	display->draw();
 
 	glutSwapBuffers();

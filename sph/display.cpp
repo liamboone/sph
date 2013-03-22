@@ -170,6 +170,14 @@ void Display::draw()
 {
 	world->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	//TODO: draw particles
+	std::vector<Particle> particles = theFluid->getParticles(); 
+	for (int i = 0; i < particles.size(); i++)
+	{
+		World::Shape * particle = new World::Cube();
+		particle->translate(particles.at(i).getPosition()); 
+		particle->scale(vec3(0.1));
+		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
+	}
 }
 
 void Display::updateCamera()
@@ -179,4 +187,9 @@ void Display::updateCamera()
 	
 	glUniformMatrix4fv(u_projMatrixLocation, 1, GL_FALSE, &cmat[0][0]);
 	glUniform3f(u_camPositionLocation, cpos.x, cpos.y, cpos.z );
+}
+
+void Display::setFluids(Fluid *fluid)
+{
+	theFluid = fluid; 
 }
