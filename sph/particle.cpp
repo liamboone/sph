@@ -11,6 +11,7 @@ Particle::Particle(float den, float m, glm::vec3 pos, glm::vec3 vel)
 	mass = m; 
 	position.x = pos.x; position.y = pos.y; position.z = pos.z; 
 	velocity.x = vel.x; velocity.y = vel.y; velocity.z = vel.z; 
+	viscosity = 1.13; 
 }
 
 Particle::~Particle(void)
@@ -35,6 +36,16 @@ glm::vec3 Particle::getVelocity()
 void Particle::setVelocity(glm::vec3 vel)
 {
 	velocity = vel; 
+}
+
+void Particle::setViscosity(float v)
+{
+	viscosity = v; 
+}
+
+float Particle::getViscosity()
+{
+	return viscosity; 
 }
 
 std::vector<Particle> Particle::getNeighbors()
