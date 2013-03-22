@@ -78,6 +78,8 @@
   <ItemGroup>
     <None Include="pass.frag" />
     <None Include="pass.vert" />
+    <None Include="shadow.frag" />
+    <None Include="shadow.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

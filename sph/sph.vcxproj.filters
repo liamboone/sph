@@ -58,5 +58,11 @@
     <None Include="pass.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shadow.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shadow.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
