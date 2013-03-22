@@ -14,6 +14,7 @@
 
 #include "camera.h"
 #include "world.h"
+#include "fluid.h"
 
 using namespace glm;
 
@@ -24,6 +25,7 @@ public:
 	char* textFileRead(const char* filename);
 	void printLinkInfoLog(int prog);
 	void printShaderInfoLog(int shader);
+	void setFluids(Fluid *fluid); 
 
 	void draw();
 	void updateCamera();
@@ -36,6 +38,7 @@ private:
 
 	World * world;
 	Camera * camera;
+	Fluid* theFluid; 
 
 	vec3 lightPos;
 	vec3 lightCol;
