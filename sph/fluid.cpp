@@ -94,24 +94,35 @@ void Fluid::computeDensity(float dt)
 
 //Computes the current pressure of the particles
 //TODO - check.  The paper doesn't store this, but uses it directly in the forces (noted in particle.h as well)
-void Fluid::computePressure(float dt)
+glm::vec3 Fluid::computePressure(float dt, int i )
 {
 	//Get the pressure: p = k * (currDens - restDens)
-
-	for (int i = 0; i < theParticles.size(); i++)
-	{
-		float pressure = 0;
-		float pi = (k* (theParticles.at(i).getDensity() - theParticles.at(i).getRestDensity())); 
-		std::vector<Particle> neighbors = theParticles.at(i).getNeighbors();
-		for (int j = 0; j < neighbors.size(); j++) {
-			float pj = (k* (neighbors.at(j).getDensity() - neighbors.at(j).getRestDensity())); 
-			float r = glm::distance(theParticles.at(i).getPosition(), neighbors.at(j).getPosition()); 
-			//fPressure = - sum (mj (tempPi + tempPj) / 2 pj * gradient(W(ri - rj, h))
-			pressure += (neighbors.at(j).getMass() * ((pi + pj) / (2.0 * neighbors.at(j).getDensity())) * wSpiky(r, h)); 
-		}
-		theParticles.at(i).setPressure(-pressure);
+	glm::vec3 pressure(0.0);
+	float pi = (k* (theParticles.at(i).getDensity() - theParticles.at(i).getRestDensity())); 
+	std::vector<Particle> neighbors = theParticles.at(i).getNeighbors();
+	for (int j = 0; j < neighbors.size(); j++) {
+		float pj = (k* (neighbors.at(j).getDensity() - neighbors.at(j).getRestDensity())); 
+		float r = glm::distance(theParticles.at(i).getPosition(), neighbors.at(j).getPosition()); 
+		//fPressure = - sum (mj (tempPi + tempPj) / 2 pj * gradient(W(ri - rj, h))
+		pressure += (neighbors.at(j).getMass() * ((pi + pj) / (2.0 * neighbors.at(j).getDensity())) * wSpiky(r, h)); //TODO - use gradient of spiky
 	}
+	
+	return -pressure;
+}
 
+glm::vec3 Fluid::computeViscosity(float dt, int i)
+{
+	glm::vec3 v(0.0); 
+	std::vector<Particle> neighbors = theParticles.at(i).getNeighbors();
+	float weightI = theParticles.at(i).getMass() / theParticles.at(i).getDensity(); 
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		glm::vec3 r = theParticles.at(i).getPosition() - theParticles.at(j).getPosition();
+		//v += (theParticles.at(i).getViscosity() + theParticles.at(j).getViscosity() / 2.0) *
+		//	(theParticles.at(j).getMass() / theParticles.at(j).getDensity()) *
+		//	(theParticles.at(j).getVelocity() - theParticles.at(i).getVelocity()) * wViscosityGrad(r, h); 
+	}
+	return v; 
 }
 
 void Fluid::computeForces(float dt, glm::vec3 externalForces)
@@ -119,7 +130,10 @@ void Fluid::computeForces(float dt, glm::vec3 externalForces)
 	//TODO - add other forces for now, just add gravity
 	for (int i = 0; i < theParticles.size(); i++) 
 	{
-		theParticles.at(i).setForce(glm::vec3(0, -9.8, 0) * theParticles.at(i).getMass()); 
+		glm::vec3 pressureForce = computePressure(dt, i); 
+		glm::vec3 viscosityForce = computeViscosity(dt, i); 
+		glm::vec3 finalForce = pressureForce + viscosityForce + externalForces; 
+		theParticles.at(i).setForce(glm::vec3(0, -9.8, 0) * theParticles.at(i).getDensity()); 
 	}
 }
 
@@ -228,6 +242,16 @@ float Fluid::wPoly6(float r, float h)
 	}
 }
 
+glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
+{
+
+}
+
+float Fluid::wPoly6Lap(glm::vec3 r, float h)
+{
+
+}
+
 //Used for pressure calcs
 float Fluid::wSpiky(float r, float h)
 {
@@ -249,6 +273,26 @@ float Fluid::wViscosity(float r, float h)
 	} else {
 		return 0; 
 	}
+}
+
+glm::vec3 Fluid::wViscosityGrad(glm::vec3 r, float h)
+{
+
+}
+
+float Fluid::wViscosityLap(glm::vec3 r, float h)
+{
+
+}
+
+glm::vec3 Fluid::wSpikyGrad(glm::vec3 r, float h)
+{
+
+}
+
+float Fluid::wSpikyLap(glm::vec3 r, float h)
+{
+
 }
 
 //************************************************************************************************
@@ -293,3 +337,4 @@ const std::vector<Particle>& Fluid::getParticles()
 {
 	return theParticles; 
 }
+

@@ -36,6 +36,9 @@ public:
 	void setPressure(float p);
 	float getPressure(); 
 
+	void setViscosity(float v);
+	float getViscosity(); 
+
 	std::vector<Particle> getNeighbors();
 	void setNeighbors(std::vector<Particle> n); 
 	void addNeighbor(Particle p); 
