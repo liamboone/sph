@@ -37,7 +37,7 @@ void Fluid::Reset()
 //Initialize fluid from some point
 void Fluid::addFluid(float dt)
 {
-	Particle p(1000.0, 1.0, glm::vec3(0, 1.0, 0), glm::vec3(0.5, 0.7, 1.0));
+	Particle p(1000.0, 1.0, glm::vec3(0, 5.0, 0), glm::vec3(0.5, 0.7, 1.0));
 	theParticles.push_back(p);
 }
 

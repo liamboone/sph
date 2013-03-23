@@ -75,6 +75,7 @@ Display::Display()
 	
 	// assign locations
 	positionLocation = 0;
+	shadowPositionLocation = 0;
 	colorLocation = 1;
 	normalLocation = 2;
 	
@@ -168,10 +169,10 @@ void Display::initShaders()
 	glCompileShader(vertexShader);
 	glCompileShader(fragmentShader);
 	
-	const char* vertShadowSource = textFileRead(vertFile);
-	const char* fragShadowSource = textFileRead(fragFile);
-	glShaderSource(vertexShadowShader, 1, &vertSource, 0);
-	glShaderSource(fragmentShadowShader, 1, &fragSource, 0);
+	const char* vertShadowSource = textFileRead(vertShadowFile);
+	const char* fragShadowSource = textFileRead(fragShadowFile);
+	glShaderSource(vertexShadowShader, 1, &vertShadowSource, 0);
+	glShaderSource(fragmentShadowShader, 1, &fragShadowSource, 0);
 	glCompileShader(vertexShadowShader);
 	glCompileShader(fragmentShadowShader);
 
@@ -220,7 +221,7 @@ void Display::initShaders()
 	} 
 	
 	//set the attribute locations for our shaders
-	glBindAttribLocation(shaderProgram, shadowPositionLocation, "vs_position");
+	glBindAttribLocation(shadowShaderProgram, shadowPositionLocation, "vs_position");
 
 	//finish shader setup
 	glAttachShader(shadowShaderProgram, vertexShadowShader);
@@ -261,14 +262,14 @@ void Display::draw()
 	
 	glUniformMatrix4fv(u_shadowProjMatrixLocation, 1, GL_FALSE, &cmat[0][0]);
 
-	world->draw( positionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+	world->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 	//TODO: draw particles
 	for (int i = 0; i < particles.size(); i++)
 	{
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i).getPosition()); 
 		particle->scale(vec3(0.1));
-		particle->draw( positionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+		particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 	}
 	//END render from light
 
