@@ -17,6 +17,8 @@ using namespace glm;
 int buttonPress;
 int old_X;
 int old_Y;
+bool play = false;
+bool singleStep = false;
 
 void resize_cb(int, int);
 void display_cb(void);
@@ -94,6 +96,15 @@ void keypress_cb(unsigned char key, int x, int y) {
 	case 27: // ascii code of esc key
 		exit(0);
 		break;
+	case '=':
+		play = !play;
+		break;
+	case '>':
+		play = true;
+		break;
+	case '.':
+		singleStep = true;
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -102,7 +113,11 @@ void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	theFluid.Update(0.05, glm::vec3(0, -9.8, 0)); 
+	if( play || singleStep )
+	{
+		singleStep = false;
+		theFluid.Update(0.005, glm::vec3(0, -9.8, 0)); 
+	}
 	display->draw();
 
 	glutSwapBuffers();

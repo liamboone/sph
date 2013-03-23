@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "particle.h"
-//using namespace glm;
 
+using namespace glm;
 
 class Fluid
 {

@@ -48,17 +48,17 @@ float Particle::getViscosity()
 	return viscosity; 
 }
 
-std::vector<Particle> Particle::getNeighbors()
+std::vector<Particle*> Particle::getNeighbors()
 {
 	return neighbors; 
 }
 
-void Particle::setNeighbors(std::vector<Particle> n)
+void Particle::setNeighbors(std::vector<Particle*> n)
 {
 	neighbors = n; 
 }
 
-void Particle::addNeighbor(Particle p)
+void Particle::addNeighbor(Particle *p)
 {
 	neighbors.push_back(p); 
 }

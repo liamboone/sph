@@ -39,9 +39,9 @@ public:
 	void setViscosity(float v);
 	float getViscosity(); 
 
-	std::vector<Particle> getNeighbors();
-	void setNeighbors(std::vector<Particle> n); 
-	void addNeighbor(Particle p); 
+	std::vector<Particle*> getNeighbors();
+	void setNeighbors(std::vector<Particle*> n); 
+	void addNeighbor(Particle *p); 
 	void clearNeighbors(); 
 
 
@@ -59,6 +59,6 @@ private:
 	glm::vec3 color;
 	float viscosity; 
 	float temp; 
-	std::vector<Particle> neighbors; 
+	std::vector<Particle*> neighbors; 
 };
 
