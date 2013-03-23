@@ -22,9 +22,6 @@ Fluid::~Fluid(void)
 {
 }
 
-
-
-
 //Draws the current frame 
 void Fluid::Draw(const glm::vec3& eyePos)
 {
@@ -40,7 +37,7 @@ void Fluid::Reset()
 //Initialize fluid from some point
 void Fluid::addFluid(float dt)
 {
-	Particle p(1000.0, 1.0, glm::vec3(0, 10.0, 0), glm::vec3(0.5, 0, 0));
+	Particle p(1000.0, 1.0, glm::vec3(0, 1.0, 0), glm::vec3(0.5, 0.7, 1.0));
 	theParticles.push_back(p);
 }
 
@@ -51,7 +48,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 10000)
+	if (theParticles.size() < 100)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);
@@ -175,9 +172,46 @@ void Fluid::resolveCollisions()
 {
 	for (int i = 0; i < theParticles.size(); i++)
 	{
-		if (theParticles.at(i).getPosition().y < 0) {
-			theParticles.at(i).setPostion(glm::vec3(theParticles.at(i).getPosition().x, 0, theParticles.at(i).getPosition().z)); 
-			theParticles.at(i).setVelocity(glm::vec3(theParticles.at(i).getVelocity().x, -theParticles.at(i).getVelocity().y, theParticles.at(i).getVelocity().z));  
+		glm::vec3 pos = theParticles.at(i).getPosition();
+		glm::vec3 vel = theParticles.at(i).getVelocity();
+		bool updated = false;
+
+		if (pos.x < -3) {
+			updated = true;
+			pos.x = -3;
+			vel.x *= -1;
+		}
+		if (pos.y < 0) {
+			updated = true;
+			pos.y = 0;
+			vel.y *= -1;  
+		}
+		if (pos.z < -3) {
+			updated = true;
+			pos.z = -3;
+			vel.z *= -1; 
+		}
+
+		if (pos.x > 3) {
+			updated = true;
+			pos.x = 3;
+			vel.x *= -1;
+		}
+		if (pos.y > 6) {
+			updated = true;
+			pos.y = 6;
+			vel.y *= -1;  
+		}
+		if (pos.z > 3) {
+			updated = true;
+			pos.z = 3;
+			vel.z *= -1; 
+		}
+
+		if (updated)
+		{
+			theParticles.at(i).setPostion(pos); 
+			theParticles.at(i).setVelocity(vel);
 		}
 	}
 }

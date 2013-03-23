@@ -1,6 +1,7 @@
 #version 330
 
 uniform mat4 u_projMatrix;
+uniform mat4 u_shadowProjMatrix;
 uniform mat4 u_modelMatrix;
 uniform vec3 u_lightPosition;
 
@@ -12,6 +13,7 @@ out vec3 fs_position;
 out vec3 fs_normal;
 out vec3 fs_color;
 out vec3 fs_light_vector;
+out vec4 fs_shadowUV;
 
 void main()
 {
@@ -23,4 +25,6 @@ void main()
 
 	//built-in things to pass down the pipeline
 	gl_Position = u_projMatrix * u_modelMatrix * vs_position;
+
+	fs_shadowUV = u_shadowProjMatrix * u_modelMatrix * vs_position;
 }

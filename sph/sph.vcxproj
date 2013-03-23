@@ -80,8 +80,8 @@
     <ClInclude Include="world.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="pass.frag" />
-    <None Include="pass.vert" />
+    <None Include="diffuse.frag" />
+    <None Include="diffuse.vert" />
     <None Include="shadow.frag" />
     <None Include="shadow.vert" />
   </ItemGroup>

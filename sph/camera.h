@@ -29,6 +29,8 @@ public:
 	void setViewport( int w, int h );
 	void setPos( vec3 newpos ) { pos = newpos; }
 	
+	int getWidth() { return width; }
+	int getHeight() { return height; }
 	vec3 getPos() { return pos; }
 	mat4 getMat4();
 

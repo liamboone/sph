@@ -43,12 +43,22 @@ private:
 	vec3 lightPos;
 	vec3 lightCol;
 
+	//frame buffer / depth texture
+	unsigned int fbo;
+	unsigned int depthTexture;
+
 	//shader stuff
 	unsigned int vertexShader;
 	unsigned int fragmentShader;
 	unsigned int shaderProgram;
 
+	unsigned int vertexShadowShader;
+	unsigned int fragmentShadowShader;
+	unsigned int shadowShaderProgram;
+
 	//attributes
+	unsigned int shadowPositionLocation;
+
 	unsigned int positionLocation;
 	unsigned int colorLocation;
 	unsigned int normalLocation;
@@ -59,6 +69,11 @@ private:
 	unsigned int u_lightPositionLocation;
 	unsigned int u_lightColorLocation;
 	unsigned int u_camPositionLocation;
+
+	unsigned int u_shadowModelMatrixLocation;
+	unsigned int u_shadowProjMatrixLocation;
+	unsigned int u_shadowMapLocation;
+	unsigned int u_shadowBiasMatrixLocation;
 };
 
 #endif

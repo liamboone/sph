@@ -25,12 +25,6 @@ void World::loadFromFile( const std::string& filename )
 	shape->setColor( 0.5, 0.5, 0.5 );
 	
 	m_shapes.push_back( shape );
-
-	shape = new World::Cube();
-	shape->translate( vec3( 0.0f, 0.5f, 0.0f ) );
-	shape->setColor( 0.5, 0.5, 1.0 );
-
-	m_shapes.push_back( shape );
 }
 
 void World::draw( GLuint ploc, GLuint cloc, GLuint nloc, GLint Mloc )

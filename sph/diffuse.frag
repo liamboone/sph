@@ -2,11 +2,13 @@
 
 uniform vec3 u_lightColor;
 uniform vec3 u_camPosition;
+uniform sampler2D u_shadowMap;
 
 in vec3 fs_position;
 in vec3 fs_normal;
 in vec3 fs_color;
 in vec3 fs_light_vector;
+in vec4 fs_shadowUV;
 
 out vec4 outColor;
 
@@ -24,5 +26,11 @@ void main(void)
     float diffuseTerm = clamp( 0.9 * dot(normal, light), 0.0, 1.0);
 	float specularTerm = clamp( 0.1 * pow( max( 0.0, dot( reflect(-light, normal), view)), 50.0), 0.0, 1.0);
 
+	float visibility = 1.0;
+	if ( texture( u_shadowMap, fs_shadowUV.xy ).z  <  ( fs_shadowUV.z / fs_shadowUV.w ) ){
+		visibility = 0.5;
+	}
+
     outColor = lightColor * diffuseColor * ( ambientTerm + diffuseTerm ) + lightColor * specularTerm;
+	outColor *= visibility;
 }

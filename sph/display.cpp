@@ -1,4 +1,7 @@
 #include "display.h"
+#include "../glm/gtc/type_ptr.hpp"
+
+#define SHADOW_MAP_SIZE 1024
 
 //BEGIN glsl utilities
 // from swiftless.com
@@ -92,9 +95,11 @@ Display::Display()
 	u_lightPositionLocation		= glGetUniformLocation(shaderProgram, "u_lightPosition");
 	u_lightColorLocation		= glGetUniformLocation(shaderProgram, "u_lightColor");
 	u_camPositionLocation		= glGetUniformLocation(shaderProgram, "u_camPosition");
-
-	//Always remember that it doesn't do much good if you don't have OpenGL actually use the shaders
-	glUseProgram(shaderProgram);
+	u_shadowMapLocation			= glGetUniformLocation(shaderProgram, "u_shadowMap");
+	u_shadowBiasMatrixLocation	= glGetUniformLocation(shaderProgram, "u_shadowProjMatrix");
+	
+	u_shadowModelMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_modelMatrix");
+	u_shadowProjMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_projMatrix");
 
 	lightCol = vec3( 1.0f, 1.0f, 1.0f );
 	lightPos = vec3( 5.0f, 10.0f, 3.0f );
@@ -107,23 +112,53 @@ Display::Display()
 	vec3 cpos = camera->getPos();
 	mat4 cmat = camera->getMat4();
 	mat4 mmat( 1.0f );
-
+	
+	glUseProgram(shaderProgram);
 	glUniformMatrix4fv(u_modelMatrixLocation, 1, GL_FALSE, &mmat[0][0]);
 	glUniformMatrix4fv(u_projMatrixLocation, 1, GL_FALSE, &cmat[0][0]);
 	glUniform3f(u_lightPositionLocation, lightPos.x, lightPos.y, lightPos.z );
 	glUniform3f(u_lightColorLocation, lightCol.x, lightCol.y, lightCol.z );
 	glUniform3f(u_camPositionLocation, cpos.x, cpos.y, cpos.z );
+	
+	// The framebuffer
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+ 
+	// Depth texture. Slower than a depth buffer, but you can sample it later in your shader
+	glGenTextures(1, &depthTexture);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE,
+		0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+ 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+	glDrawBuffer(GL_NONE); // No color buffer is drawn to.
+ 
+	// Always check that our framebuffer is ok
+	assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 //Thanks to Tiantian Liu @ University of Pennsylvania, 2012
 void Display::initShaders()
 {
 	//here is stuff for setting up our shaders
-	const char* fragFile = "pass.frag";
-	const char* vertFile = "pass.vert";
+	const char* fragFile = "diffuse.frag";
+	const char* vertFile = "diffuse.vert";
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	shaderProgram = glCreateProgram();
+	
+	const char* fragShadowFile = "shadow.frag";
+	const char* vertShadowFile = "shadow.vert";
+	vertexShadowShader = glCreateShader(GL_VERTEX_SHADER);
+	fragmentShadowShader = glCreateShader(GL_FRAGMENT_SHADER);
+	shadowShaderProgram = glCreateProgram();
 	
 	//load up the source, compile and link the shader program
 	const char* vertSource = textFileRead(vertFile);
@@ -132,6 +167,13 @@ void Display::initShaders()
 	glShaderSource(fragmentShader, 1, &fragSource, 0);
 	glCompileShader(vertexShader);
 	glCompileShader(fragmentShader);
+	
+	const char* vertShadowSource = textFileRead(vertFile);
+	const char* fragShadowSource = textFileRead(fragFile);
+	glShaderSource(vertexShadowShader, 1, &vertSource, 0);
+	glShaderSource(fragmentShadowShader, 1, &fragSource, 0);
+	glCompileShader(vertexShadowShader);
+	glCompileShader(fragmentShadowShader);
 
 	//For your convenience, i decided to throw in some compiler/linker output helper functions
 	//from CIS 565
@@ -164,13 +206,97 @@ void Display::initShaders()
 	{
 		printLinkInfoLog(shaderProgram);
 	}
+
+	//compile shadow stuff
+	glGetShaderiv(vertexShadowShader, GL_COMPILE_STATUS, &compiled);
+	if (!compiled)
+	{
+		printShaderInfoLog(vertexShadowShader);
+	} 
+	glGetShaderiv(fragmentShadowShader, GL_COMPILE_STATUS, &compiled);
+	if (!compiled)
+	{
+		printShaderInfoLog(fragmentShadowShader);
+	} 
+	
+	//set the attribute locations for our shaders
+	glBindAttribLocation(shaderProgram, shadowPositionLocation, "vs_position");
+
+	//finish shader setup
+	glAttachShader(shadowShaderProgram, vertexShadowShader);
+	glAttachShader(shadowShaderProgram, fragmentShadowShader);
+	glLinkProgram(shadowShaderProgram);
+	
+	//check for linking success
+	glGetProgramiv(shadowShaderProgram,GL_LINK_STATUS, &linked);
+	if (!linked) 
+	{
+		printLinkInfoLog(shadowShaderProgram);
+	}
 }
 
 void Display::draw()
 {
+	std::vector<Particle> particles = theFluid->getParticles();
+	int w = camera->getWidth();
+	int h = camera->getHeight();
+
+
+	//BEGIN render from light
+	glUseProgram(shadowShaderProgram);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	// Clear previous frame values
+	glClear( GL_DEPTH_BUFFER_BIT);
+	
+	//Disable color rendering, we only want to write to the Z-Buffer
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
+	glCullFace( GL_FRONT );
+
+	camera->setViewport(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+	glViewport(0,0,SHADOW_MAP_SIZE,SHADOW_MAP_SIZE);
+	vec3 pos = camera->getPos();
+	camera->setPos( vec3( lightPos.x, lightPos.y, lightPos.z ) );
+	
+	mat4 cmat = camera->getMat4();
+	
+	glUniformMatrix4fv(u_shadowProjMatrixLocation, 1, GL_FALSE, &cmat[0][0]);
+
+	world->draw( positionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+	//TODO: draw particles
+	for (int i = 0; i < particles.size(); i++)
+	{
+		World::Shape * particle = new World::Cube();
+		particle->translate(particles.at(i).getPosition()); 
+		particle->scale(vec3(0.1));
+		particle->draw( positionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+	}
+	//END render from light
+
+	//BEGIN render from camera
+	glUseProgram(shaderProgram);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glUniform1i( u_shadowMapLocation, 7 );
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D,depthTexture);
+
+	float bias[16] = {	0.5, 0.0, 0.0, 0.0, 
+						0.0, 0.5, 0.0, 0.0,
+						0.0, 0.0, 0.5, 0.0,
+						0.5, 0.5, 0.5, 1.0  };
+	
+	
+	mat4 cameraMatrix = make_mat4( bias ) * cmat;
+	glUniformMatrix4fv(u_shadowBiasMatrixLocation, 1, GL_FALSE, &cameraMatrix[0][0]);
+	
+	camera->setViewport(w, h);
+	camera->setPos( pos );
+	glViewport(0,0,w,h);
+	glCullFace( GL_BACK );
 	world->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	//TODO: draw particles
-	std::vector<Particle> particles = theFluid->getParticles(); 
 	for (int i = 0; i < particles.size(); i++)
 	{
 		World::Shape * particle = new World::Cube();
@@ -178,6 +304,7 @@ void Display::draw()
 		particle->scale(vec3(0.1));
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	}
+	//END render from camera
 }
 
 void Display::updateCamera()
