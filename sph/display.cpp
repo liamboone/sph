@@ -76,8 +76,8 @@ Display::Display()
 	// assign locations
 	positionLocation = 0;
 	shadowPositionLocation = 0;
-	colorLocation = 1;
-	normalLocation = 2;
+	normalLocation = 1;
+	colorLocation = 2;
 	
 	//Everybody does this
 	glClearColor(0, 0, 0, 1);
@@ -145,95 +145,61 @@ Display::Display()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-//Thanks to Tiantian Liu @ University of Pennsylvania, 2012
-void Display::initShaders()
+void Display::loadShader( const char* vertFile, const char* fragFile, Shader & shader )
 {
-	//here is stuff for setting up our shaders
-	const char* fragFile = "diffuse.frag";
-	const char* vertFile = "diffuse.vert";
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	shaderProgram = glCreateProgram();
-	
-	const char* fragShadowFile = "shadow.frag";
-	const char* vertShadowFile = "shadow.vert";
-	vertexShadowShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShadowShader = glCreateShader(GL_FRAGMENT_SHADER);
-	shadowShaderProgram = glCreateProgram();
+	shader.vertex = glCreateShader(GL_VERTEX_SHADER);
+	shader.fragment = glCreateShader(GL_FRAGMENT_SHADER);
+	shader.program = glCreateProgram();
 	
 	//load up the source, compile and link the shader program
 	const char* vertSource = textFileRead(vertFile);
 	const char* fragSource = textFileRead(fragFile);
-	glShaderSource(vertexShader, 1, &vertSource, 0);
-	glShaderSource(fragmentShader, 1, &fragSource, 0);
-	glCompileShader(vertexShader);
-	glCompileShader(fragmentShader);
-	
-	const char* vertShadowSource = textFileRead(vertShadowFile);
-	const char* fragShadowSource = textFileRead(fragShadowFile);
-	glShaderSource(vertexShadowShader, 1, &vertShadowSource, 0);
-	glShaderSource(fragmentShadowShader, 1, &fragShadowSource, 0);
-	glCompileShader(vertexShadowShader);
-	glCompileShader(fragmentShadowShader);
+	glShaderSource(shader.vertex, 1, &vertSource, 0);
+	glShaderSource(shader.fragment, 1, &fragSource, 0);
+	glCompileShader(shader.vertex);
+	glCompileShader(shader.fragment);
 
 	//For your convenience, i decided to throw in some compiler/linker output helper functions
 	//from CIS 565
 	GLint compiled;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(shader.vertex, GL_COMPILE_STATUS, &compiled);
 	if (!compiled)
 	{
-		printShaderInfoLog(vertexShader);
+		printShaderInfoLog(shader.vertex);
 	} 
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(shader.fragment, GL_COMPILE_STATUS, &compiled);
 	if (!compiled)
 	{
-		printShaderInfoLog(fragmentShader);
+		printShaderInfoLog(shader.fragment);
 	} 
 	
-	//set the attribute locations for our shaders
+	//finish shader setup
+	glAttachShader(shader.program, shader.vertex);
+	glAttachShader(shader.program, shader.fragment);
+	glLinkProgram(shader.program);
+	
+	//check for linking success
+	GLint linked;
+	glGetProgramiv(shader.program,GL_LINK_STATUS, &linked);
+	if (!linked) 
+	{
+		printLinkInfoLog(shader.program);
+	}
+}
+
+//Thanks to Tiantian Liu @ University of Pennsylvania, 2012
+void Display::initShaders()
+{
+	Shader shader;
+	loadShader( "diffuse.vert", "diffuse.frag", shader );
+	shaderProgram = shader.program;
 	glBindAttribLocation(shaderProgram, positionLocation, "vs_position");
 	glBindAttribLocation(shaderProgram, normalLocation, "vs_normal");
 	glBindAttribLocation(shaderProgram, colorLocation, "vs_color");
 
-	//finish shader setup
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	
-	//check for linking success
-	GLint linked;
-	glGetProgramiv(shaderProgram,GL_LINK_STATUS, &linked);
-	if (!linked) 
-	{
-		printLinkInfoLog(shaderProgram);
-	}
-
-	//compile shadow stuff
-	glGetShaderiv(vertexShadowShader, GL_COMPILE_STATUS, &compiled);
-	if (!compiled)
-	{
-		printShaderInfoLog(vertexShadowShader);
-	} 
-	glGetShaderiv(fragmentShadowShader, GL_COMPILE_STATUS, &compiled);
-	if (!compiled)
-	{
-		printShaderInfoLog(fragmentShadowShader);
-	} 
-	
-	//set the attribute locations for our shaders
+	loadShader( "shadow.vert", "shadow.frag", shader );
+	shadowShaderProgram = shader.program;
 	glBindAttribLocation(shadowShaderProgram, shadowPositionLocation, "vs_position");
-
-	//finish shader setup
-	glAttachShader(shadowShaderProgram, vertexShadowShader);
-	glAttachShader(shadowShaderProgram, fragmentShadowShader);
-	glLinkProgram(shadowShaderProgram);
-	
-	//check for linking success
-	glGetProgramiv(shadowShaderProgram,GL_LINK_STATUS, &linked);
-	if (!linked) 
-	{
-		printLinkInfoLog(shadowShaderProgram);
-	}
 }
 
 void Display::draw()
@@ -241,7 +207,6 @@ void Display::draw()
 	std::vector<Particle> particles = theFluid->getParticles();
 	int w = camera->getWidth();
 	int h = camera->getHeight();
-
 
 	//BEGIN render from light
 	glUseProgram(shadowShaderProgram);
@@ -303,6 +268,7 @@ void Display::draw()
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i).getPosition()); 
 		particle->scale(vec3(0.1));
+		particle->setColor( 0.5, 0.5, 1 );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	}
 	//END render from camera

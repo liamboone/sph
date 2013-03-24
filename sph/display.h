@@ -18,6 +18,13 @@
 
 using namespace glm;
 
+struct Shader
+{
+	unsigned int vertex;
+	unsigned int fragment;
+	unsigned int program;
+};
+
 class Display
 {
 public:
@@ -35,10 +42,11 @@ public:
 
 private:
 	void initShaders();
+	void loadShader( const char* vertFile, const char* fragFile, Shader & shader );
 
 	World * world;
 	Camera * camera;
-	Fluid* theFluid; 
+	Fluid * theFluid; 
 
 	vec3 lightPos;
 	vec3 lightCol;
@@ -48,12 +56,7 @@ private:
 	unsigned int depthTexture;
 
 	//shader stuff
-	unsigned int vertexShader;
-	unsigned int fragmentShader;
 	unsigned int shaderProgram;
-
-	unsigned int vertexShadowShader;
-	unsigned int fragmentShadowShader;
 	unsigned int shadowShaderProgram;
 
 	//attributes

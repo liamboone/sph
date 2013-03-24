@@ -76,5 +76,11 @@
     <None Include="diffuse.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="object.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="object.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

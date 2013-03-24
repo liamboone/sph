@@ -82,6 +82,8 @@
   <ItemGroup>
     <None Include="diffuse.frag" />
     <None Include="diffuse.vert" />
+    <None Include="object.frag" />
+    <None Include="object.vert" />
     <None Include="shadow.frag" />
     <None Include="shadow.vert" />
   </ItemGroup>

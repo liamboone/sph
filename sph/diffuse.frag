@@ -26,10 +26,13 @@ void main(void)
     float diffuseTerm = clamp( 0.9 * dot(normal, light), 0.0, 1.0);
 	float specularTerm = clamp( 0.1 * pow( max( 0.0, dot( reflect(-light, normal), view)), 50.0), 0.0, 1.0);
 
+	vec3 shadowUV = fs_shadowUV.xyz / fs_shadowUV.w;
 	float visibility = 1.0;
-	if ( texture( u_shadowMap, fs_shadowUV.xy / fs_shadowUV.w ).z  <  ( fs_shadowUV.z / fs_shadowUV.w ) ){
-		visibility = 0.5;
+	if ( shadowUV.x > 0 && shadowUV.y > 0 && shadowUV.x < 1 && shadowUV.y < 1 )
+	{
+		if ( texture( u_shadowMap, shadowUV.xy ).z  <  shadowUV.z ){
+			visibility = 0.5;
+		}
 	}
-
     outColor = lightColor * diffuseColor * ( ambientTerm + diffuseTerm * visibility ) + lightColor * specularTerm * visibility;
 }
