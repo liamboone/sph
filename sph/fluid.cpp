@@ -2,11 +2,11 @@
 
 
 //Globals
-const double h = 0.05;
+const double h = 0.5;
 const double containerSizeX = 10.0; 
 const double containerSizeY = 10.0; 
 const double containerSizeZ = 10.0; 
-const double k = 1.5; //TODO - make this function dependant on the temp
+const double k = 3; //TODO - make this function dependant on the temp
 
 const double PI = 3.14159265; 
 
@@ -15,6 +15,19 @@ Fluid::Fluid(void)
 
 	//Sets up the size of the grid that the particles fall into 
 	SetGridSize(containerSizeX, containerSizeY, containerSizeZ);
+
+
+	for( int x = 0; x < 5; x ++ )
+	{
+		for( int y = 0; y < 5; y ++ )
+		{
+			for( int z = 0; z < 5; z ++ )
+			{
+				Particle p(0.00001, 2, glm::vec3(0.1*x-0.2, 0.1*y, 0.1*z-0.2), glm::vec3(0));
+				theParticles.push_back(p);
+			}
+		}
+	}
 }
 
 
@@ -37,7 +50,7 @@ void Fluid::Reset()
 //Initialize fluid from some point
 void Fluid::addFluid(float dt)
 {
-	Particle p(15, 0.002, glm::vec3(0, 2.0, 0), glm::vec3(0.1, 0.2, 0.3));
+	Particle p(1, 0.2, glm::vec3(0, 2.0, 0), glm::vec3(5, 5, 0.5));
 	theParticles.push_back(p);
 }
 
@@ -48,7 +61,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 1000)
+	if (theParticles.size() < 100)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);
@@ -123,7 +136,7 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 		//	(theParticles.at(j).getMass() / theParticles.at(j).getDensity()) *
 		//	(theParticles.at(j).getVelocity() - theParticles.at(i).getVelocity()) * wViscosityGrad(r, h); 
 	}
-	return 1.5f*v; 
+	return 5.0f*v; 
 }
 
 void Fluid::computeForces(float dt, glm::vec3 externalForces)
@@ -191,9 +204,9 @@ void Fluid::resolveCollisions()
 		glm::vec3 vel = theParticles.at(i).getVelocity();
 		bool updated = false;
 
-		if (pos.x < -3) {
+		if (pos.x < -0.3) {
 			updated = true;
-			pos.x = -3;
+			pos.x = -0.3;
 			vel.x *= -1;
 		}
 		if (pos.y < 0) {
@@ -201,15 +214,15 @@ void Fluid::resolveCollisions()
 			pos.y = 0;
 			vel.y *= -1;  
 		}
-		if (pos.z < -3) {
+		if (pos.z < -0.3) {
 			updated = true;
-			pos.z = -3;
+			pos.z = -0.3;
 			vel.z *= -1; 
 		}
 
-		if (pos.x > 3) {
+		if (pos.x > 0.3) {
 			updated = true;
-			pos.x = 3;
+			pos.x = 0.3;
 			vel.x *= -1;
 		}
 		if (pos.y > 6) {
@@ -217,9 +230,9 @@ void Fluid::resolveCollisions()
 			pos.y = 6;
 			vel.y *= -1;  
 		}
-		if (pos.z > 3) {
+		if (pos.z > 0.3) {
 			updated = true;
-			pos.z = 3;
+			pos.z = 0.3;
 			vel.z *= -1; 
 		}
 
@@ -234,6 +247,8 @@ void Fluid::resolveCollisions()
 
 float Fluid::wPoly6(float r, float h)
 {
+	r *= 100;
+	h *= 100;
 	if (0 <= r && r <= h) {
 		float c = 315.0 / (64.0 * PI * pow(h, 9)); 
 		float w = pow(pow(h, 2) - pow(r, 2), 3); 
@@ -245,6 +260,8 @@ float Fluid::wPoly6(float r, float h)
 
 glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
 {
+	r *= 100;
+	h *= 100;
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
 		float lrs = lr*lr-h*h;
@@ -262,6 +279,8 @@ glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
 //Used for pressure calcs
 float Fluid::wSpiky(float r, float h)
 {
+	r *= 100;
+	h *= 100;
 	if (0 <= r && r <= h) {
 		float c = 15.0 / (PI * pow(h, 6)); 
 		float w = pow (h - r, 3); 
@@ -272,6 +291,8 @@ float Fluid::wSpiky(float r, float h)
 }
 vec3 Fluid::wSpikyGrad(vec3 r, float h)
 {
+	r *= 100;
+	h *= 100;
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
 		float c = 15.0 / (PI * pow(h, 6)); 
@@ -298,6 +319,8 @@ glm::vec3 Fluid::wViscosityGrad(glm::vec3 r, float h)
 
 float Fluid::wViscosityLap(glm::vec3 r, float h)
 {
+	r *= 100;
+	h *= 100;
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
 		float c = 45.0f / (PI * pow(h, 6)); 
