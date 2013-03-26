@@ -2,6 +2,8 @@
 #include "..\glm\glm.hpp";
 #include "..\glm/gtc/matrix_transform.hpp"
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
 
 #include "particle.h"
 

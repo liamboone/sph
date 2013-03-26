@@ -116,7 +116,7 @@ void display_cb() {
 	if( play || singleStep )
 	{
 		singleStep = false;
-		theFluid.Update(0.005, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.0005, glm::vec3(0, -9.8, 0)); 
 	}
 	display->draw();
 
