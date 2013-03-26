@@ -28,6 +28,7 @@ public:
 	//Forces 
 	glm::vec3 computePressure(float dt, int i);
 	glm::vec3 computeViscosity(float dt, int i); 
+	glm::vec3 computeSurfaceTension(float dt, int i); 
 	void computeForces(float dt, glm::vec3 externalForces);
 
 	//Position & velocity integration

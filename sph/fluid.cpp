@@ -13,7 +13,7 @@ const double PI = 3.14159265;
 Fluid::Fluid(void)
 {
 	frame = 0;
-	srand (time(NULL));
+	/*srand (time(NULL));*/
 	//Sets up the size of the grid that the particles fall into 
 	SetGridSize(containerSizeX, containerSizeY, containerSizeZ);
 
@@ -43,6 +43,7 @@ void Fluid::Reset()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
+	/*
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
 		for (float y = 1.8; y < 2.2; y += 0.1 )
@@ -56,7 +57,7 @@ void Fluid::addFluid(float dt)
 			theParticles.push_back(p);
 		}
 	}
-	/*
+	//*/
 	for( float y = 0; y < 0.8; y += 0.1 )
 	{
 		for( float x = -0.5; x < 0.4; x += 0.1 )
@@ -71,7 +72,7 @@ void Fluid::addFluid(float dt)
 			}
 		}
 	}
-	*/
+	//*/
 }
 
 //**********************************************************************************************
@@ -81,7 +82,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 1000 && frame % 20 == 0)
+	if (theParticles.size() < 100 )//0 && frame % 20 == 0)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);
@@ -157,6 +158,27 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 	return 0.7f*v; 
 }
 
+glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
+{
+	glm::vec3 n(0.0); 
+    float k = 0.0; 
+	std::vector<Particle*> neighbors = theParticles.at(i).getNeighbors();
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		glm::vec3 r = theParticles.at(i).getPosition() - neighbors.at(j)->getPosition();
+
+		float mass = neighbors.at(j)->getMass(); 
+		float denInv = 1.0 / (neighbors.at(j)->getDensity() + 1e-15f); 
+		n += mass * denInv * wPoly6Grad(r, h); 
+		k += mass * denInv * wPoly6Lap(r, h); 
+	}
+
+	k = -k / (glm::length(n) + 1e-15f); 
+	n =  n / (glm::length(n) + 1e-15f);
+	return 10.f * k * n; 
+}
+
+
 void Fluid::computeForces(float dt, glm::vec3 externalForces)
 {
 	//TODO - add other forces for now, just add gravity
@@ -164,9 +186,8 @@ void Fluid::computeForces(float dt, glm::vec3 externalForces)
 	{
 		glm::vec3 pressureForce = computePressure(dt, i); 
 		glm::vec3 viscosityForce = computeViscosity(dt, i); 
-		if (glm::length(pressureForce) > 0 || glm::length(viscosityForce) > 0)
-			int gotHere = 1; 
-		glm::vec3 finalForce = pressureForce + theParticles.at(i).getDensity()*externalForces + viscosityForce; 
+		glm::vec3 surfaceTension = computeSurfaceTension(dt, i);
+		glm::vec3 finalForce = pressureForce + theParticles.at(i).getDensity()*externalForces + viscosityForce + surfaceTension; 
 		theParticles.at(i).setForce( finalForce ); 
 	}
 }
@@ -179,32 +200,29 @@ void Fluid::integrate(float dt)
 		Particle& p = theParticles.at(i); 
 		p.setVelocity(p.getVelocity() + dt * p.getForce() / p.getDensity());
 		p.setPostion(p.getPosition() + dt * p.getVelocity());
+
 	}
 
 	//************Leap frog start **************************
-	//http://en.wikipedia.org/wiki/Leapfrog_integration	
+	////http://en.wikipedia.org/wiki/Leapfrog_integration	
 	//std::vector<vec3> currAccel;
 	//for (int i = 0; i < theParticles.size(); i++)
 	//{
-	//		Particle p = theParticles.at(i); 
-	//		glm::vec3 accel = p.getForce() / p.getMass(); 
+	//		Particle& p = theParticles.at(i); 
+	//		glm::vec3 accel = p.getForce() / p.getDensity(); 
 	//		currAccel.push_back(accel);
 	//		glm::vec3 newPos = p.getPosition() + p.getVelocity() * dt + accel * dt * dt * (float) 0.5;
 	//		p.setPostion(newPos); 
 	//}
 
-	////TODO - figure out what to add here/ if we should use different scheme
-	//computeForces(dt, vec3(0, 0, 0));
+	//computeForces(dt, vec3(0, -9.80, 0));
 
 	//for (int i = 0; i < theParticles.size(); i++)
 	//{
 	//	Particle& p = theParticles.at(i);
-	//	vec3 newAccel = p.getForce()/ p.getMass();
-
-	//	p.setVelocity(p.getVelocity() + dt * (float) 0.5 * (currAccel.at(i) + newAccel));
-	//	
+	//	vec3 newAccel = p.getForce()/ p.getDensity();
+	//	p.setVelocity(p.getVelocity() + dt * (float) 0.5 * (currAccel.at(i) + newAccel));		
 	//}
-
 }
 
 void Fluid::computeVelocity(float dt)
@@ -304,6 +322,19 @@ glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
 		return c * w; 
 	} else {
 		return vec3( 0.0 );
+	}
+}
+
+float Fluid::wPoly6Lap(glm::vec3 r, float h)
+{
+	float c = 315.0 / (64.0 * PI * pow(h, 9)); 
+	float lr = glm::length(r); 
+	float lrS = lr * lr; 
+	if (0 <= lr && lr <= h) {
+		float w = -6 * ( 3 * h * h * h * h - 10 * h * h * lrS + 7 * lrS * lrS);
+		return c * w; 
+	} else {
+		return 0.0f; 
 	}
 }
 
