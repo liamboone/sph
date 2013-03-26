@@ -268,7 +268,7 @@ void Display::draw()
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i).getPosition()); 
 		particle->scale(vec3(0.1));
-		particle->setColor( 0.5, 0.5, 1 );
+		particle->setColor( 0.5, (float)i / particles.size(), 1 );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	}
 	//END render from camera

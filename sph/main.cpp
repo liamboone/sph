@@ -112,11 +112,13 @@ void keypress_cb(unsigned char key, int x, int y) {
 void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+	char title[100];
+	sprintf( title, "SPH frame:%d", theFluid.frame ); 
+	glutSetWindowTitle( title );
 	if( play || singleStep )
 	{
 		singleStep = false;
-		theFluid.Update(0.0005, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.003, glm::vec3(0, -9.8, 0)); 
 	}
 	display->draw();
 

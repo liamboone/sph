@@ -21,7 +21,7 @@ public:
 	void addFluid(float dt);
 
 	//Simulation functions
-	virtual void Update(float dt, glm::vec3& externalForces);
+	void Update(float dt, glm::vec3& externalForces);
 	void findNeighbors();
 	void computeDensity(float dt);
 	
@@ -70,6 +70,7 @@ public:
 	//Draws the current frame 
     virtual void Draw(const glm::vec3& eyePos);
 
+	int frame;
 protected:
 	//Info to draw to the screen
 	int numRows, numCols, numStacks; 

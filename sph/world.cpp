@@ -22,7 +22,7 @@ void World::loadFromFile( const std::string& filename )
 
 	shape->translate( vec3( 0.0f, -0.05f, 0.0f ) );
 	shape->scale( vec3( 100.0f, 0.1f, 100.0f ) );
-	shape->setColor( 0.5, 0.5, 0.5 );
+	shape->setColor( vec3( 1.0f ) );
 	
 	m_shapes.push_back( shape );
 }
