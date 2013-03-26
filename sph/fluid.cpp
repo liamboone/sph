@@ -6,13 +6,13 @@ const double h = 0.05;
 const double containerSizeX = 10.0; 
 const double containerSizeY = 10.0; 
 const double containerSizeZ = 10.0; 
-const double k = 1.5; //TODO - make this function dependant on the temp
+const double k = 2000; //TODO - make this function dependant on the temp
 
 const double PI = 3.14159265; 
 
 Fluid::Fluid(void)
 {
-
+	srand (time(NULL));
 	//Sets up the size of the grid that the particles fall into 
 	SetGridSize(containerSizeX, containerSizeY, containerSizeZ);
 }
@@ -37,7 +37,19 @@ void Fluid::Reset()
 //Initialize fluid from some point
 void Fluid::addFluid(float dt)
 {
-	Particle p(15, 0.002, glm::vec3(0, 2.0, 0), glm::vec3(0.1, 0.2, 0.3));
+	//Density, mass, position, velocity (particle inputs)
+	float x = rand() % 3; 
+	float z = rand() % 3; 
+	float dec = rand() % 10 / 10.0; 
+	x += dec; z += dec; 
+	float signX = rand() % 2; 
+	float signZ = rand() % 2; 
+	if (signX < 1) 
+		x *= -1; 
+	if (signZ < 1) 
+		z *= -1; 
+
+	Particle p(600, 0.00020543, glm::vec3(x, 1.0, z), glm::vec3(0.0, 0.0, 0.0));
 	theParticles.push_back(p);
 }
 
@@ -68,7 +80,7 @@ void Fluid::findNeighbors()
 		for (int j = 0 ; j < theParticles.size(); j++)
 		{
 			//Compute the distance from particle i to j & add it if its within the kernal radius
-			if (glm::distance(theParticles.at(i).getPosition(), theParticles.at(j).getPosition()) <= h ) {
+			if (glm::distance(theParticles.at(i).getPosition(), theParticles.at(j).getPosition()) <= h  && i != j) {
 				theParticles.at(i).addNeighbor(&(theParticles.at(j))); 
 			}
 		}
@@ -103,7 +115,7 @@ glm::vec3 Fluid::computePressure(float dt, int i )
 		float pj = (k * (neighbors.at(j)->getDensity() - neighbors.at(j)->getRestDensity())); 
 		vec3 r = theParticles.at(i).getPosition() - neighbors.at(j)->getPosition(); 
 		//fPressure = - sum (mj (tempPi + tempPj) / 2 pj * gradient(W(ri - rj, h))
-		pressure += (neighbors.at(j)->getMass() * ((pi + pj) / (2.0f * neighbors.at(j)->getDensity())) * wSpikyGrad(r, h)); //TODO - use gradient of spiky
+		pressure += (neighbors.at(j)->getMass() * ((pi + pj) / (2.0f * neighbors.at(j)->getDensity())) * wSpikyGrad(r, h)); 
 	}
 	
 	return -pressure;
@@ -115,13 +127,9 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 	std::vector<Particle*> neighbors = theParticles.at(i).getNeighbors();
 	for (int j = 0; j < neighbors.size(); j++)
 	{
-		float c = theParticles.at(i).getMass() / theParticles.at(i).getDensity();
 		glm::vec3 r = theParticles.at(i).getPosition() - neighbors.at(j)->getPosition();
-		glm::vec3 vel = neighbors.at(j)->getVelocity() - theParticles.at(i).getVelocity();
-		v += neighbors.at(j)->getMass()/neighbors.at(j)->getDensity()*vel*wViscosityGrad( r, h );
-		//v += (theParticles.at(i).getViscosity() + theParticles.at(j).getViscosity() / 2.0) *
-		//	(theParticles.at(j).getMass() / theParticles.at(j).getDensity()) *
-		//	(theParticles.at(j).getVelocity() - theParticles.at(i).getVelocity()) * wViscosityGrad(r, h); 
+		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i).getVelocity()) / neighbors.at(j)->getDensity();
+		v += neighbors.at(j)->getMass()*vel*wViscosityLap( r, h );
 	}
 	return 1.5f*v; 
 }
@@ -133,7 +141,10 @@ void Fluid::computeForces(float dt, glm::vec3 externalForces)
 	{
 		glm::vec3 pressureForce = computePressure(dt, i); 
 		glm::vec3 viscosityForce = computeViscosity(dt, i); 
+		if (glm::length(pressureForce) > 0 || glm::length(viscosityForce) > 0)
+			int gotHere = 1; 
 		glm::vec3 finalForce = pressureForce + viscosityForce + externalForces; 
+		//glm::vec3 finalForce = externalForces + pressureForce;
 		theParticles.at(i).setForce( finalForce ); 
 	}
 }
@@ -185,42 +196,58 @@ void Fluid::computePosition(float dt)
 
 void Fluid::resolveCollisions()
 {
+
+	// p.velocity = p.velocity - 2.0 * Dot(normal, p.velocity) * normal;
 	for (int i = 0; i < theParticles.size(); i++)
 	{
 		glm::vec3 pos = theParticles.at(i).getPosition();
 		glm::vec3 vel = theParticles.at(i).getVelocity();
 		bool updated = false;
 
+		//For now, don't handle corners
 		if (pos.x < -3) {
+			glm::vec3 normal = glm::vec3(1, 0, 0); 
 			updated = true;
+			//Normal of wall is 
 			pos.x = -3;
-			vel.x *= -1;
+			vel = vel - (float) 2.0 * glm::dot(normal, vel) * normal; 
+			//vel.x *= -1;
 		}
 		if (pos.y < 0) {
+			glm::vec3 normal = glm::vec3(0, 1.0, 0); 
 			updated = true;
 			pos.y = 0;
-			vel.y *= -1;  
+			vel = vel - (float) 2.0 * glm::dot(normal, vel) * normal; 
+			//vel.y *= -1;  
 		}
 		if (pos.z < -3) {
+			glm::vec3 normal = glm::vec3(0, 0, 1); 
 			updated = true;
 			pos.z = -3;
-			vel.z *= -1; 
+			vel = vel - (float) 2.0 * glm::dot(normal, vel) * normal; 
+			//vel.z *= -1; 
 		}
 
 		if (pos.x > 3) {
+			glm::vec3 normal = glm::vec3(-1, 0, 0); 
 			updated = true;
 			pos.x = 3;
-			vel.x *= -1;
+			vel = vel - (float) 2.0 * glm::dot(normal, vel) * normal; 
+			//vel.x *= -1;
 		}
 		if (pos.y > 6) {
+			glm::vec3 normal = glm::vec3(0, -1.0, 0); 
 			updated = true;
 			pos.y = 6;
-			vel.y *= -1;  
+			vel = vel - (float) 2.0 * glm::dot(normal, vel) * normal; 
+			//vel.y *= -1;  
 		}
 		if (pos.z > 3) {
+			glm::vec3 normal = glm::vec3(0, 0, -1.0); 
 			updated = true;
 			pos.z = 3;
-			vel.z *= -1; 
+			vel = vel - (float) 2.0 * glm::dot(normal, vel) * normal; 
+			//vel.z *= -1; 
 		}
 
 		if (updated)
