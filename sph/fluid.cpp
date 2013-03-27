@@ -216,7 +216,7 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i)->getVelocity()) / neighbors.at(j)->getDensity();
 		v += neighbors.at(j)->getMass()*vel*wViscosityLap( r, h );
 	}
-	return 0.7f*v; 
+	return 15.f*v; 
 }
 
 glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
