@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#include "memleak.h"
+
 // glew
 #include "glew.h"
 

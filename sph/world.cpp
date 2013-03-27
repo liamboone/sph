@@ -9,7 +9,7 @@ World::~World()
 {
     for (unsigned int i = 0; i < m_shapes.size(); i++)
     {
-        delete m_shapes[i];
+        delete m_shapes.at(i);
     }
     m_shapes.clear();
 }

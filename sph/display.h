@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "memleak.h"
+
 // glew
 #include "glew.h"
 
@@ -29,11 +31,13 @@ class Display
 {
 public:
 	Display();
+	~Display();
 	char* textFileRead(const char* filename);
 	void printLinkInfoLog(int prog);
 	void printShaderInfoLog(int shader);
 	void setFluids(Fluid *fluid); 
 
+	void init();
 	void draw();
 	void updateCamera();
 	void updateViewport( int w, int h ) { camera->setViewport( w, h ); updateCamera(); }

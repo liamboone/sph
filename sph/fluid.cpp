@@ -10,7 +10,7 @@ const double k = 500; //TODO - make this function dependant on the temp
 
 const double PI = 3.14159265; 
 
-Fluid::Fluid(void)
+Fluid::Fluid(void)// : container( 100, 100, 100, vec3( -3, 0, -3 ), vec3( 3, 6, 3 ) )
 {
 	frame = 0;
 	/*srand (time(NULL));*/
@@ -43,7 +43,7 @@ void Fluid::Reset()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	/*
+	//*
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
 		for (float y = 1.8; y < 2.2; y += 0.1 )
@@ -53,11 +53,11 @@ void Fluid::addFluid(float dt)
 			float rz = 0.01*((double) rand() / (RAND_MAX)); 
 
 			//Density, mass, position, velocity (particle inputs)
-			Particle p(1500, 1, glm::vec3(rx-2.9, y+ry, z+rz), glm::vec3(3, 0.0, 0.0));
+			Particle * p = new Particle(1500, 1, glm::vec3(rx-1.5, y+ry, z+rz), glm::vec3(-3, 0.0, 0.0));
 			theParticles.push_back(p);
 		}
 	}
-	//*/
+	/*/
 	for( float y = 0; y < 0.8; y += 0.1 )
 	{
 		for( float x = -0.5; x < 0.4; x += 0.1 )
@@ -67,8 +67,16 @@ void Fluid::addFluid(float dt)
 				float rx = 0.01*(float)rand() / RAND_MAX; 
 				float ry = 0.01*(float)rand() / RAND_MAX; 
 				float rz = 0.01*(float)rand() / RAND_MAX; 
-				Particle p(600, 1, glm::vec3(x+rx, 0.3+y+ry, z+rz), glm::vec3(0));
+				vec3 pos(x+rx, 3+y+ry, z+rz);
+				Particle * p = new Particle(1500, 1, pos, glm::vec3(0));
 				theParticles.push_back(p);
+				//Box * box = container( pos );
+				//if( box->frame < frame )
+				//{
+				//	box->particles.clear();
+				//	box->frame = frame;
+				//}
+				//box->particles.push_back( p );
 			}
 		}
 	}
@@ -82,7 +90,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 100 )//0 && frame % 20 == 0)
+	if (theParticles.size() < 1000 && frame % 15 == 0)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);
@@ -92,6 +100,17 @@ void Fluid::Update(float dt, glm::vec3& externalForces)
 	//computePosition(dt);
 	resolveCollisions();
 	frame++;
+	/*
+	container.clear();
+	for (int i = 0; i < theParticles.size(); i++)
+	{
+		Particle * p = theParticles.at(i);
+		Box * box = container( p->getPosition() );
+		box->particles.clear();
+		box->frame = frame;
+		box->particles.push_back( p );
+	}
+	*/
 }
 
 //Finds all the the particles current neighbors and stores them in the particle's neighbors vector
@@ -99,14 +118,56 @@ void Fluid::findNeighbors()
 {
 	for (int i = 0; i < theParticles.size(); i++)
 	{
-		theParticles.at(i).clearNeighbors(); 
+		Particle * p = theParticles.at(i);
+		p->clearNeighbors();
+		/*
+		vec3 offset( 0 );
+		Box * visited[27];
+		int j = 0;
+		for ( int x = -1; x <= 1; x ++ )
+		{
+			offset.x = x*h;
+			for ( int y = -1; y <= 1; y ++ )
+			{
+				offset.y = y*h;
+				for ( int z = -1; z <= 1; z ++ )
+				{
+					offset.z = z*h;
+					Box * box = container( p->getPosition() + offset );
+					visited[j] = box;
+					if( box != NULL )
+					{
+						if( box->frame < frame )
+						{
+							box->frame = frame;
+							box->particles.clear();
+						}
+						else
+						{
+							bool flag = true;
+							for( int k = 0; k < j; k ++ )
+							{
+								flag = flag && ( visited[k] != box );
+							}
+							if( flag )
+							{
+								p->addNeighbors( box->particles );
+							}
+						}
+					}
+					j++;
+				}
+			}
+		}
+		/*/
 		for (int j = 0 ; j < theParticles.size(); j++)
 		{
 			//Compute the distance from particle i to j & add it if its within the kernal radius
-			if (glm::distance(theParticles.at(i).getPosition(), theParticles.at(j).getPosition()) <= h ) {
-				theParticles.at(i).addNeighbor(&(theParticles.at(j))); 
+			if (glm::distance(theParticles.at(i)->getPosition(), theParticles.at(j)->getPosition()) <= h ) {
+				theParticles.at(i)->addNeighbor( theParticles.at(j) ); 
 			}
 		}
+		//*/
 	}
 }
 
@@ -116,14 +177,14 @@ void Fluid::computeDensity(float dt)
 	for (int i = 0; i < theParticles.size(); i++)
 	{
 		float density = 0; //theParticles.at( i ).getRestDensity();
-		vec3 pos_i = theParticles.at(i).getPosition();
-		std::vector<Particle*> neighbors = theParticles.at(i).getNeighbors();
+		vec3 pos_i = theParticles.at(i)->getPosition();
+		std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
 		for (int j = 0; j < neighbors.size(); j++)
 		{
 			float r = glm::distance(pos_i, neighbors.at(j)->getPosition()); 
 			density += (neighbors.at(j)->getMass() * wPoly6(r, h));
 		}
-		theParticles.at(i).setDensity(density); 
+		theParticles.at(i)->setDensity(density); 
 	}
 }
 
@@ -133,11 +194,11 @@ glm::vec3 Fluid::computePressure(float dt, int i )
 {
 	//Get the pressure: p = k * (currDens - restDens)
 	glm::vec3 pressure(0.0);
-	float pi = (k * (theParticles.at(i).getDensity() - theParticles.at(i).getRestDensity())); 
-	std::vector<Particle*> neighbors = theParticles.at(i).getNeighbors();
+	float pi = (k * (theParticles.at(i)->getDensity() - theParticles.at(i)->getRestDensity())); 
+	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
 	for (int j = 0; j < neighbors.size(); j++) {
 		float pj = (k * (neighbors.at(j)->getDensity() - neighbors.at(j)->getRestDensity())); 
-		vec3 r = theParticles.at(i).getPosition() - neighbors.at(j)->getPosition(); 
+		vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition(); 
 		//fPressure = - sum (mj (tempPi + tempPj) / 2 pj * gradient(W(ri - rj, h))
 		pressure += neighbors.at(j)->getMass() * ((pi + pj) / (1e-15f + 2.0f * neighbors.at(j)->getDensity())) * wSpikyGrad(r, h); 
 	}
@@ -148,11 +209,11 @@ glm::vec3 Fluid::computePressure(float dt, int i )
 glm::vec3 Fluid::computeViscosity(float dt, int i)
 {
 	glm::vec3 v(0.0); 
-	std::vector<Particle*> neighbors = theParticles.at(i).getNeighbors();
+	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
 	for (int j = 0; j < neighbors.size(); j++)
 	{
-		glm::vec3 r = theParticles.at(i).getPosition() - neighbors.at(j)->getPosition();
-		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i).getVelocity()) / neighbors.at(j)->getDensity();
+		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
+		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i)->getVelocity()) / neighbors.at(j)->getDensity();
 		v += neighbors.at(j)->getMass()*vel*wViscosityLap( r, h );
 	}
 	return 0.7f*v; 
@@ -162,10 +223,10 @@ glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
 {
 	glm::vec3 n(0.0); 
     float k = 0.0; 
-	std::vector<Particle*> neighbors = theParticles.at(i).getNeighbors();
+	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
 	for (int j = 0; j < neighbors.size(); j++)
 	{
-		glm::vec3 r = theParticles.at(i).getPosition() - neighbors.at(j)->getPosition();
+		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
 
 		float mass = neighbors.at(j)->getMass(); 
 		float denInv = 1.0 / (neighbors.at(j)->getDensity() + 1e-15f); 
@@ -187,8 +248,8 @@ void Fluid::computeForces(float dt, glm::vec3 externalForces)
 		glm::vec3 pressureForce = computePressure(dt, i); 
 		glm::vec3 viscosityForce = computeViscosity(dt, i); 
 		glm::vec3 surfaceTension = computeSurfaceTension(dt, i);
-		glm::vec3 finalForce = pressureForce + theParticles.at(i).getDensity()*externalForces + viscosityForce + surfaceTension; 
-		theParticles.at(i).setForce( finalForce ); 
+		glm::vec3 finalForce = pressureForce + theParticles.at(i)->getDensity()*externalForces + viscosityForce + surfaceTension; 
+		theParticles.at(i)->setForce( finalForce ); 
 	}
 }
 
@@ -197,9 +258,9 @@ void Fluid::integrate(float dt)
 	//Euler just in case leapfrog is wrong
 	for (int i = 0; i < theParticles.size(); i++)
 	{
-		Particle& p = theParticles.at(i); 
-		p.setVelocity(p.getVelocity() + dt * p.getForce() / p.getDensity());
-		p.setPostion(p.getPosition() + dt * p.getVelocity());
+		Particle * p = theParticles.at(i); 
+		p->setVelocity(p->getVelocity() + dt * p->getForce() / p->getDensity());
+		p->setPostion(p->getPosition() + dt * p->getVelocity());
 
 	}
 
@@ -240,8 +301,8 @@ void Fluid::resolveCollisions()
 	// p.velocity = p.velocity - 2.0 * Dot(normal, p.velocity) * normal;
 	for (int i = 0; i < theParticles.size(); i++)
 	{
-		glm::vec3 pos = theParticles.at(i).getPosition();
-		glm::vec3 vel = theParticles.at(i).getVelocity();
+		glm::vec3 pos = theParticles.at(i)->getPosition();
+		glm::vec3 vel = theParticles.at(i)->getVelocity();
 		bool updated = false;
 		//For now, don't handle corners
 		if (pos.x < -3) {
@@ -291,8 +352,8 @@ void Fluid::resolveCollisions()
 
 		if (updated)
 		{
-			theParticles.at(i).setPostion(pos); 
-			theParticles.at(i).setVelocity(vel);
+			theParticles.at(i)->setPostion(pos); 
+			theParticles.at(i)->setVelocity(vel);
 		}
 	}
 }
@@ -425,7 +486,7 @@ unsigned int Fluid::GetDrawFlags() const
 	return drawFlags;
 }
 
-const std::vector<Particle>& Fluid::getParticles()
+const std::vector<Particle*>& Fluid::getParticles()
 {
 	return theParticles; 
 }

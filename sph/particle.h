@@ -2,6 +2,8 @@
 //#include "vec.h"  //TODO - use vec or glm? 
 #include <vector> 
 
+#include "memleak.h"
+
 // glm
 #include "..\glm\glm.hpp";
 #include "..\glm/gtc/matrix_transform.hpp"
@@ -42,6 +44,7 @@ public:
 	std::vector<Particle*> getNeighbors();
 	void setNeighbors(std::vector<Particle*> n); 
 	void addNeighbor(Particle *p); 
+	void addNeighbors( std::vector<Particle *> vp ); 
 	void clearNeighbors(); 
 
 

@@ -69,10 +69,23 @@ void Display::printShaderInfoLog(int shader)
 }
 //END glsl utilities
 
-Display::Display()
+Display::Display() 
+{
+}
+
+Display::~Display()
+{
+	delete camera;
+	delete world;
+}
+
+void Display::init()
 {
 	glewInit();
 	
+	world = new World( "" );
+	camera = new Camera();
+
 	// assign locations
 	positionLocation = 0;
 	shadowPositionLocation = 0;
@@ -105,9 +118,6 @@ Display::Display()
 	lightCol = vec3( 1.0f, 1.0f, 1.0f );
 	lightPos = vec3( 5.0f, 10.0f, 3.0f );
 
-	world = new World( "" );
-
-	camera = new Camera();
 	camera->setViewport( 640, 480 );
 
 	vec3 cpos = camera->getPos();
@@ -204,7 +214,7 @@ void Display::initShaders()
 
 void Display::draw()
 {
-	std::vector<Particle> particles = theFluid->getParticles();
+	std::vector<Particle*> particles = theFluid->getParticles();
 	int w = camera->getWidth();
 	int h = camera->getHeight();
 
@@ -232,9 +242,10 @@ void Display::draw()
 	for (int i = 0; i < particles.size(); i++)
 	{
 		World::Shape * particle = new World::Cube();
-		particle->translate(particles.at(i).getPosition()); 
+		particle->translate(particles.at(i)->getPosition()); 
 		particle->scale(vec3(0.1));
 		particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+		delete particle;
 	}
 	//END render from light
 
@@ -266,10 +277,11 @@ void Display::draw()
 	for (int i = 0; i < particles.size(); i++)
 	{
 		World::Shape * particle = new World::Cube();
-		particle->translate(particles.at(i).getPosition()); 
+		particle->translate(particles.at(i)->getPosition()); 
 		particle->scale(vec3(0.1));
 		particle->setColor( 0.5, (float)i / particles.size(), 1 );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
+		delete particle;
 	}
 	//END render from camera
 }

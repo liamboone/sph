@@ -65,6 +65,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="Container.cpp" />
     <ClCompile Include="display.cpp" />
     <ClCompile Include="fluid.cpp" />
     <ClCompile Include="glew.c" />
@@ -74,10 +75,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="container.h" />
     <ClInclude Include="display.h" />
     <ClInclude Include="fluid.h" />
     <ClInclude Include="glew.h" />
     <ClInclude Include="glxew.h" />
+    <ClInclude Include="memleak.h" />
     <ClInclude Include="particle.h" />
     <ClInclude Include="wglew.h" />
     <ClInclude Include="world.h" />

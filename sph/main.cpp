@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "memleak.h"
+
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
 
@@ -27,7 +29,7 @@ void cleanup_cb(void);
 void mouseDrag_cb(int, int);
 void mouseClick_cb(int, int, int, int);
 
-Display * display;
+Display display;
 Fluid theFluid;
 
 int main(int argc, char** argv) 
@@ -39,8 +41,8 @@ int main(int argc, char** argv)
 	glutInitWindowSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	glutCreateWindow("SPH");
 
-	display = new Display();
-	display->setFluids(&theFluid); 
+	display.init();
+	display.setFluids(&theFluid); 
 
 	//Setup Callbacks
 	glutDisplayFunc(display_cb);
@@ -62,14 +64,14 @@ void mouseClick_cb(int button, int state, int x, int y)
 		buttonPress = button;
 		if( button == 3 )
 		{
-			display->zoomCamera( 10 );
+			display.zoomCamera( 10 );
 		}
 		else if( button == 4 )
 		{
-			display->zoomCamera( -10 );
+			display.zoomCamera( -10 );
 		}
 	}
-	display->updateCamera();
+	display.updateCamera();
 	old_X = x;
 	old_Y = y;
 }
@@ -78,11 +80,11 @@ void mouseDrag_cb(int x, int y)
 {
 	if( buttonPress == GLUT_LEFT_BUTTON )
 	{
-		display->orbitCamera( x-old_X, y-old_Y );
+		display.orbitCamera( x-old_X, y-old_Y );
 	}
 	if( buttonPress == GLUT_RIGHT_BUTTON )
 	{
-		display->zoomCamera( y-old_Y );
+		display.zoomCamera( y-old_Y );
 	}
 	old_X = x;
 	old_Y = y;
@@ -94,6 +96,8 @@ void keypress_cb(unsigned char key, int x, int y) {
 	case 'q': 
 	case 'Q':
 	case 27: // ascii code of esc key
+		_CrtDumpMemoryLeaks();
+		system( "pause" );
 		exit(0);
 		break;
 	case '=':
@@ -120,7 +124,7 @@ void display_cb() {
 		singleStep = false;
 		theFluid.Update(0.003, glm::vec3(0, -9.8, 0)); 
 	}
-	display->draw();
+	display.draw();
 
 	glutSwapBuffers();
 }
@@ -129,7 +133,7 @@ void resize_cb(int width, int height) {
 	//set the viewport, more boilerplate
 	glViewport(0, 0, width, height);
 
-	display->updateViewport( width, height );
+	display.updateViewport( width, height );
 
 	glutPostRedisplay();
 }

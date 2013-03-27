@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "memleak.h"
+
 #include "particle.h"
+#include "container.h"
 
 using namespace glm;
 
@@ -15,7 +18,7 @@ public:
 	Fluid(void);
 	~Fluid(void);
 
-	const std::vector<Particle> &getParticles();
+	const std::vector<Particle*> &getParticles();
 	//************************************************************************************************
 	//Initialize fluid from some point
 	void addFluid(float dt);
@@ -77,7 +80,7 @@ protected:
 	int numRows, numCols, numStacks; 
 	unsigned int drawFlags;
 	
-	std::vector<Particle> theParticles; 
-	
+	std::vector<Particle *> theParticles; 
+	//Container container;
 };
 

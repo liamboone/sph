@@ -4,6 +4,8 @@
 // c++ libraries
 #include <iostream>
 
+#include "memleak.h"
+
 // glm
 #include "../glm/glm.hpp"
 #include "../glm/gtc/matrix_transform.hpp"
