@@ -43,7 +43,7 @@ void Fluid::Reset()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	//*
+	/*
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
 		for (float y = 1.8; y < 2.2; y += 0.1 )
@@ -90,7 +90,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 1000 && frame % 15 == 0)
+	if (theParticles.size() < 100 )//0 && frame % 15 == 0)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);

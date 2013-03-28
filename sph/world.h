@@ -29,6 +29,7 @@ public:
     class Shape
     {
     public:
+		~Shape();
         ShapeType getType() const { return type; }
 		virtual void draw( GLuint ploc, GLuint cloc, GLuint nloc, GLint Mloc );
 		void setColor( float r, float g, float b ) { setColor( vec3( r, g, b ) ); }

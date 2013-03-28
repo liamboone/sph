@@ -77,6 +77,15 @@ Display::~Display()
 {
 	delete camera;
 	delete world;
+	
+	glDeleteBuffers(1, &fbo);
+
+	//Tear down the shader program in reverse of building it
+	/*glDetachShader(shaderProgram, vertexShader);
+	glDetachShader(shaderProgram, fragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	glDeleteProgram(shaderProgram);*/
 }
 
 void Display::init()

@@ -35,6 +35,14 @@ void World::draw( GLuint ploc, GLuint cloc, GLuint nloc, GLint Mloc )
 	}
 }
 
+World::Shape::~Shape()
+{
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &cbo);
+	glDeleteBuffers(1, &nbo);
+	glDeleteBuffers(1, &ibo);
+}
+
 void World::Cube::setColor( vec3 rgb )
 {
 	color = rgb;
