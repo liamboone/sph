@@ -252,7 +252,7 @@ void Display::draw()
 	{
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale(vec3(0.1));
+		particle->scale(vec3(0.05));
 		particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 		delete particle;
 	}
@@ -287,7 +287,7 @@ void Display::draw()
 	{
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale(vec3(0.1));
+		particle->scale(vec3(0.05));
 		particle->setColor( 0.5, (float)i / particles.size(), 1 );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 		delete particle;

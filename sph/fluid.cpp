@@ -6,7 +6,7 @@ const double h = 0.1;
 const double containerSizeX = 10.0; 
 const double containerSizeY = 10.0; 
 const double containerSizeZ = 10.0; 
-const double k = 500; //TODO - make this function dependant on the temp
+const double k = 300; //TODO - make this function dependant on the temp
 
 const double PI = 3.14159265; 
 
@@ -19,7 +19,7 @@ Fluid::Fluid(void)// : container( 100, 100, 100, vec3( -3, 0, -3 ), vec3( 3, 6, 
 
 	/*
 	
-	*/
+	//*/
 }
 
 
@@ -58,16 +58,16 @@ void Fluid::addFluid(float dt)
 		}
 	}
 	/*/
-	for( float y = 0; y < 0.8; y += 0.1 )
+	for( float y = 0; y < 2; y += 0.1 )
 	{
-		for( float x = -0.5; x < 0.4; x += 0.1 )
+		for( float x = -0.5; x < 0.5; x += 0.1 )
 		{
-			for( float z = -0.5; z < 0.4; z += 0.1 )
+			for( float z = -0.5; z < 0.5; z += 0.1 )
 			{
 				float rx = 0.01*(float)rand() / RAND_MAX; 
 				float ry = 0.01*(float)rand() / RAND_MAX; 
 				float rz = 0.01*(float)rand() / RAND_MAX; 
-				vec3 pos(x+rx, 3+y+ry, z+rz);
+				vec3 pos(x+rx, y+ry, z+rz);
 				Particle * p = new Particle(1500, 1, pos, glm::vec3(0));
 				theParticles.push_back(p);
 				//Box * box = container( pos );
@@ -236,7 +236,7 @@ glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
 
 	k = -k / (glm::length(n) + 1e-15f); 
 	n =  n / (glm::length(n) + 1e-15f);
-	return 10.f * k * n; 
+	return 50.f * k * n; 
 }
 
 
