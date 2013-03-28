@@ -261,28 +261,41 @@ void Fluid::integrate(float dt)
 		Particle * p = theParticles.at(i); 
 		p->setVelocity(p->getVelocity() + dt * p->getForce() / p->getDensity());
 		p->setPostion(p->getPosition() + dt * p->getVelocity());
-
 	}
 
-	//************Leap frog start **************************
+	////************Leap frog start **************************
 	////http://en.wikipedia.org/wiki/Leapfrog_integration	
-	//std::vector<vec3> currAccel;
+	//std::vector<glm::vec3> currAccel;
 	//for (int i = 0; i < theParticles.size(); i++)
 	//{
-	//		Particle& p = theParticles.at(i); 
+	//		Particle& p = *theParticles.at(i); 
 	//		glm::vec3 accel = p.getForce() / p.getDensity(); 
 	//		currAccel.push_back(accel);
 	//		glm::vec3 newPos = p.getPosition() + p.getVelocity() * dt + accel * dt * dt * (float) 0.5;
 	//		p.setPostion(newPos); 
 	//}
+	//
+	////std::vector<Particle> particleCopy(theParticles);
+	////computeForces(dt, vec3(0, -9.8, 0), particleCopy);
+	//std::vector<glm::vec3> newForce; 
 
-	//computeForces(dt, vec3(0, -9.80, 0));
+	////Update forces
+	//findNeighbors(); 
+	//computeDensity(dt);
+	//for (int i = 0; i < theParticles.size(); i++)
+	//{
+	//	glm::vec3 pressureForce = computePressure(dt, i); 
+	//	glm::vec3 viscosityForce = computeViscosity(dt, i); 
+	//	glm::vec3 surfaceTension = computeSurfaceTension(dt, i);
+	//	glm::vec3 finalForce = pressureForce + theParticles.at(i)->getDensity()*vec3(0.0, -9.8, 0.0) + viscosityForce + surfaceTension; 
+	//	newForce.push_back(finalForce); 
+	//}
 
 	//for (int i = 0; i < theParticles.size(); i++)
 	//{
-	//	Particle& p = theParticles.at(i);
-	//	vec3 newAccel = p.getForce()/ p.getDensity();
-	//	p.setVelocity(p.getVelocity() + dt * (float) 0.5 * (currAccel.at(i) + newAccel));		
+	//	vec3 newAccel = newForce.at(i) / theParticles.at(i)->getDensity();
+	//	vec3 avgAccel = (float) 0.5 * currAccel.at(i) + newAccel; 
+	//	theParticles.at(i)->setVelocity( theParticles.at(i)->getVelocity() + dt * avgAccel);		
 	//}
 }
 

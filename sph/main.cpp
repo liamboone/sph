@@ -14,7 +14,15 @@
 #include "fluid.h"
 #include "display.h"
 
+#include <IL/il.h>
+#include <IL/ilu.h>
+#include <IL/ilut.h>
+
 using namespace glm;
+
+
+int theFrameNum = 0; 
+bool isRecording = false;
 
 int buttonPress;
 int old_X;
@@ -51,6 +59,12 @@ int main(int argc, char** argv)
 	glutMouseFunc(mouseClick_cb);
 	glutMotionFunc(mouseDrag_cb);
 	glutIdleFunc(display_cb);
+
+	//Recording - devIL
+	ilInit();
+    iluInit();
+    ilEnable(IL_FILE_OVERWRITE);
+    ilutRenderer(ILUT_OPENGL);
 
 	//Start it off
 	glutMainLoop();
@@ -109,8 +123,52 @@ void keypress_cb(unsigned char key, int x, int y) {
 	case '.':
 		singleStep = true;
 		break;
+	case 'r':
+		isRecording = !isRecording; 
+		if (isRecording) theFrameNum = 0;
+		break;
 	}
 	glutPostRedisplay();
+}
+
+//Taken from previous 593 assignments (JelloSim) 
+void grabScreen()  
+{
+    unsigned int image;
+    ilGenImages(1, &image);
+    ilBindImage(image);
+
+    ILenum error = ilGetError();
+    assert(error == IL_NO_ERROR);
+
+    ilTexImage(640, 480, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, NULL);
+
+    error = ilGetError();
+    assert(error == IL_NO_ERROR);
+
+    unsigned char* data = ilGetData();
+
+    error = ilGetError();
+    assert(error == IL_NO_ERROR);
+
+    for (int i=479; i>=0; i--) 
+    {
+	    glReadPixels(0,i,640,1,GL_RGB, GL_UNSIGNED_BYTE, 
+		    data + (640 * 3 * i));
+    }
+
+    char anim_filename[2048];
+    sprintf_s(anim_filename, 2048, "output/%04d.png", theFrameNum++); 
+
+    ilSave(IL_PNG, anim_filename);
+
+    error = ilGetError();
+    assert(error == IL_NO_ERROR);
+
+    ilDeleteImages(1, &image);
+
+    error = ilGetError();
+    assert(error == IL_NO_ERROR);
 }
 
 void display_cb() {
@@ -125,6 +183,7 @@ void display_cb() {
 		theFluid.Update(0.003, glm::vec3(0, -9.8, 0)); 
 	}
 	display.draw();
+	if (isRecording) grabScreen(); 
 
 	glutSwapBuffers();
 }
@@ -137,3 +196,4 @@ void resize_cb(int width, int height) {
 
 	glutPostRedisplay();
 }
+
