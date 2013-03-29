@@ -66,12 +66,7 @@ void Particle::addNeighbor(Particle *p)
 
 void Particle::addNeighbors( std::vector<Particle *> vp)
 {
-	std::vector< Particle * >::iterator it;
-	for( it = vp.begin(); it != vp.end(); ++ it )
-	{
-		if (glm::distance( position, (*it)->getPosition() ) <= 0.1 )
-			neighbors.push_back( *it );
-	}
+	neighbors.insert(neighbors.begin(), vp.begin(), vp.end());
 }
 
 void Particle::clearNeighbors()

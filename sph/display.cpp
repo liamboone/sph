@@ -1,6 +1,8 @@
 #include "display.h"
 #include "../glm/gtc/type_ptr.hpp"
 
+#include <algorithm>
+
 #define SHADOW_MAP_SIZE 1024
 
 //BEGIN glsl utilities
@@ -283,12 +285,15 @@ void Display::draw()
 	glCullFace( GL_BACK );
 	world->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	//TODO: draw particles
+	Box* b1 = theFluid->container( vec3(0,0,0) );
+
 	for (int i = 0; i < particles.size(); i++)
 	{
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale(vec3(0.05));
-		particle->setColor( 0.5, (float)i / particles.size(), 1 );
+		particle->scale(vec3(0.05)); 
+		Box *box = theFluid->container( particles.at(i)->getPosition() );
+		particle->setColor( glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 		delete particle;
 	}

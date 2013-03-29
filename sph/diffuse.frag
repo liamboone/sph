@@ -28,7 +28,7 @@ void main(void)
 
 	vec3 shadowUV = fs_shadowUV.xyz / fs_shadowUV.w;
 	float visibility = 1.0;
-	if ( shadowUV.x > 0 && shadowUV.y > 0 && shadowUV.x < 1 && shadowUV.y < 1 )
+	if ( shadowUV.x > 0.01 && shadowUV.y > 0.01 && shadowUV.x < 0.99 && shadowUV.y < 0.99 )
 	{
 		if ( texture( u_shadowMap, shadowUV.xy ).z  <  shadowUV.z ){
 			visibility = 0.5;

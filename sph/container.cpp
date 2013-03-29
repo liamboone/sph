@@ -21,26 +21,9 @@ Box * Container::operator()( vec3 p )
 
 	int i,j,k;
 	
-	if( x >= 0 && x < 1.0 )
-	{
-		i = floor( width * x );
-	}
-	else
-		return NULL;
-
-	if( y >= 0 && y < 1.0 )
-	{
-		j = floor( height * y );
-	}
-	else
-		return NULL;
-
-	if( z >= 0 && z < 1.0 )
-	{
-		k = floor( depth * z );
-	}
-	else
-		return NULL;
+	i = floor( width * x );
+	j = floor( height * y );
+	k = floor( depth * z );
 
 	return &grid[i + j*width + k*width*height];
 }

@@ -175,7 +175,7 @@ void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	char title[100];
-	sprintf( title, "SPH frame:%d", theFluid.frame ); 
+	sprintf( title, "SPH frame: %d, #particles: %d", theFluid.frame, theFluid.getParticles().size() ); 
 	glutSetWindowTitle( title );
 	if( play || singleStep )
 	{

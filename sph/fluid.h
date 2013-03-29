@@ -37,10 +37,6 @@ public:
 	//Position & velocity integration
 	void integrate(float dt); 
 
-	//TODO - remove if we don't need later
-	void computeVelocity(float dt);
-	void computePosition(float dt);
-
 	void resolveCollisions(); //TODO - for now, just pushing inside, later add in fancier collisions
 	
 	//Kernal functions
@@ -59,28 +55,16 @@ public:
 	// Reset to the initial state
     virtual void Reset();
 
-	//************************************************************************************************
-	//Grid functions 
-    //Set/Get our screen resolution
-    virtual void SetGridSize(int cols, int rows, int stacks);
-    virtual int GetGridCols() const;
-    virtual int GetGridRows() const;
-    virtual int GetGridStacks() const;
-
-
-    // Set/Get our draw flags -> TODO - make this handle multiple types of drawing? 
-    virtual void SetDrawFlags(unsigned int flags);
-    virtual unsigned int GetDrawFlags() const;
 	//Draws the current frame 
     virtual void Draw(const glm::vec3& eyePos);
 
 	int frame;
+	Container container;
 protected:
 	//Info to draw to the screen
 	int numRows, numCols, numStacks; 
 	unsigned int drawFlags;
 	
 	std::vector<Particle *> theParticles; 
-	//Container container;
 };
 
