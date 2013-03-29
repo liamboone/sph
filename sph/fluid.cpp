@@ -43,7 +43,7 @@ void Fluid::Reset()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	/*
+	
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
 		for (float y = 1.8; y < 2.2; y += 0.1 )
@@ -58,7 +58,7 @@ void Fluid::addFluid(float dt)
 		}
 	}
 	/*/
-	for( float y = 0; y < 2; y += 0.1 )
+	/*for( float y = 0; y < 2; y += 0.1 )
 	{
 		for( float x = -0.5; x < 0.5; x += 0.1 )
 		{
@@ -80,7 +80,7 @@ void Fluid::addFluid(float dt)
 			}
 		}
 	}
-	//*/
+	*/
 }
 
 //**********************************************************************************************
@@ -90,7 +90,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 100 )//0 && frame % 15 == 0)
+	if (/*theParticles.size() < 100 )0 && */frame % 15 == 0)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);
@@ -255,48 +255,41 @@ void Fluid::computeForces(float dt, glm::vec3 externalForces)
 
 void Fluid::integrate(float dt)
 {
-	//Euler just in case leapfrog is wrong
+	////Euler just in case leapfrog is wrong
+	//for (int i = 0; i < theParticles.size(); i++)
+	//{
+	//	Particle * p = theParticles.at(i); 
+	//	p->setVelocity(p->getVelocity() + dt * p->getForce() / p->getDensity());
+	//	p->setPostion(p->getPosition() + dt * p->getVelocity());
+	//}
+
+	//************Leap frog start **************************
+	//http://en.wikipedia.org/wiki/Leapfrog_integration	& http://ursa.as.arizona.edu/~rad/phys305/ODE_III/node11.html
+	//Compute x + 1/2
+	std::vector<glm::vec3> accel0; 
 	for (int i = 0; i < theParticles.size(); i++)
 	{
-		Particle * p = theParticles.at(i); 
-		p->setVelocity(p->getVelocity() + dt * p->getForce() / p->getDensity());
-		p->setPostion(p->getPosition() + dt * p->getVelocity());
+		vec3 a = theParticles.at(i)->getForce() / theParticles.at(i)->getDensity();
+		if (frame == 0) 
+			theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + 0.5f * theParticles.at(i)->getVelocity() * dt + 0.25f * a * dt *dt); 
+		else 
+			theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + 0.5f * theParticles.at(i)->getVelocity() * dt); 
+		accel0.push_back(a); 
 	}
 
-	////************Leap frog start **************************
-	////http://en.wikipedia.org/wiki/Leapfrog_integration	
-	//std::vector<glm::vec3> currAccel;
-	//for (int i = 0; i < theParticles.size(); i++)
-	//{
-	//		Particle& p = *theParticles.at(i); 
-	//		glm::vec3 accel = p.getForce() / p.getDensity(); 
-	//		currAccel.push_back(accel);
-	//		glm::vec3 newPos = p.getPosition() + p.getVelocity() * dt + accel * dt * dt * (float) 0.5;
-	//		p.setPostion(newPos); 
-	//}
-	//
-	////std::vector<Particle> particleCopy(theParticles);
-	////computeForces(dt, vec3(0, -9.8, 0), particleCopy);
-	//std::vector<glm::vec3> newForce; 
+	//Recompute forces to get new accel
+	//To get the new forces, we need to find the new densities (computed from neighbors) ->TODO: is there a better way?!
+	Fluid::findNeighbors();
+	Fluid::computeDensity(dt);
+	Fluid::computeForces(dt, vec3(0, -9.8, 0));  
 
-	////Update forces
-	//findNeighbors(); 
-	//computeDensity(dt);
-	//for (int i = 0; i < theParticles.size(); i++)
-	//{
-	//	glm::vec3 pressureForce = computePressure(dt, i); 
-	//	glm::vec3 viscosityForce = computeViscosity(dt, i); 
-	//	glm::vec3 surfaceTension = computeSurfaceTension(dt, i);
-	//	glm::vec3 finalForce = pressureForce + theParticles.at(i)->getDensity()*vec3(0.0, -9.8, 0.0) + viscosityForce + surfaceTension; 
-	//	newForce.push_back(finalForce); 
-	//}
-
-	//for (int i = 0; i < theParticles.size(); i++)
-	//{
-	//	vec3 newAccel = newForce.at(i) / theParticles.at(i)->getDensity();
-	//	vec3 avgAccel = (float) 0.5 * currAccel.at(i) + newAccel; 
-	//	theParticles.at(i)->setVelocity( theParticles.at(i)->getVelocity() + dt * avgAccel);		
-	//}
+	//Compute v + 1 & x + 1
+	for (int i = 0; i < theParticles.size(); i++)
+	{
+		vec3 avgAccel = (accel0.at(i) + theParticles.at(i)->getForce() / theParticles.at(i)->getDensity()) / 2.0f; 
+		theParticles.at(i)->setVelocity(theParticles.at(i)->getVelocity() + avgAccel * dt); 
+		theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + 0.5f * theParticles.at(i)->getVelocity() *dt);
+	}
 }
 
 void Fluid::computeVelocity(float dt)
