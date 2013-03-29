@@ -66,6 +66,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\ObjCore\obj.cpp" />
+    <ClCompile Include="..\ObjCore\objloader.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Container.cpp" />
     <ClCompile Include="display.cpp" />
@@ -76,6 +78,8 @@
     <ClCompile Include="world.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ObjCore\obj.h" />
+    <ClInclude Include="..\ObjCore\objloader.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="container.h" />
     <ClInclude Include="display.h" />

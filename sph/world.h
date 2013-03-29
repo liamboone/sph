@@ -25,7 +25,7 @@ public:
     void loadFromFile(const std::string& filename);
     virtual void draw( GLuint ploc, GLuint cloc, GLuint nloc, GLint Mloc );
 
-    enum ShapeType {SPHERE, CUBE, CYLINDER};
+    enum ShapeType {SPHERE, CUBE, CYLINDER, MESH};
     class Shape
     {
     public:
@@ -80,6 +80,15 @@ public:
         vec3 start, end;
         double r;
     };
+
+	class Mesh : public Shape
+	{
+	public:
+		Mesh( std::string s ) : Shape(MESH) { mesh = s; initMesh(); }
+	private:
+		std::string mesh;
+		void initMesh();
+	};
 
     std::vector<Shape*> m_shapes;
 };

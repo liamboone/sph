@@ -1,4 +1,5 @@
 #include "world.h"
+#include "../ObjCore/objloader.h"
 
 World::World(const std::string& filename) 
 {
@@ -17,7 +18,7 @@ World::~World()
 void World::loadFromFile( const std::string& filename )
 {
 	//TODO: actually read from a file...
-
+	
 	World::Shape * shape = new World::Cube();
 
 	shape->translate( vec3( 0.0f, -0.05f, 0.0f ) );
@@ -25,6 +26,44 @@ void World::loadFromFile( const std::string& filename )
 	shape->setColor( vec3( 1.0f ) );
 	
 	m_shapes.push_back( shape );
+	/*
+	shape = new World::Mesh("../obj/bunny.obj");
+
+	shape->translate( vec3( 0.0f, -0.05f, 0.0f ) );
+	shape->scale( vec3( 100.0f, 0.1f, 100.0f ) );
+	shape->setColor( vec3( 1.0f ) );
+	
+	m_shapes.push_back( shape );
+	*/
+}
+
+void World::Mesh::initMesh( )
+{
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &cbo);
+	glGenBuffers(1, &nbo);
+	glGenBuffers(1, &ibo);
+
+	obj * meshObj = new obj();
+    objLoader* loader = new objLoader( mesh, meshObj );
+    meshObj->buildVBOs();
+    delete loader;
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, meshObj->getVBOsize() * sizeof(float), meshObj->getVBO(), GL_STATIC_DRAW); 
+
+	glBindBuffer(GL_ARRAY_BUFFER, nbo);
+	glBufferData(GL_ARRAY_BUFFER, meshObj->getNBOsize() * sizeof(float), meshObj->getNBO(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshObj->getIBOsize() * sizeof(unsigned short), meshObj->getIBO(), GL_STATIC_DRAW);
+	
+	num = meshObj->getIBOsize();
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	delete meshObj;
 }
 
 void World::draw( GLuint ploc, GLuint cloc, GLuint nloc, GLint Mloc )
