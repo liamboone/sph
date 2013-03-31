@@ -3,7 +3,7 @@
 
 //Globals
 const double h = 0.1;
-const double k = 300; //TODO - make this function dependant on the temp
+const double k = 700; //TODO - make this function dependant on the temp
 
 const double PI = 3.14159265; 
 
@@ -34,7 +34,7 @@ void Fluid::Reset()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	//*
+	/*
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
 		for (float y = 1.8; y < 2.2; y += 0.1 )
@@ -45,7 +45,7 @@ void Fluid::addFluid(float dt)
 			
 			vec3 pos(rx-1.5, y+ry, z+rz);
 			//Density, mass, position, velocity (particle inputs)
-			Particle * p = new Particle(1500, 1, pos, glm::vec3(-3, 0.0, 0.0));
+			Particle * p = new Particle(700, 1, pos, glm::vec3(-3, 0.0, 0.0));
 			theParticles.push_back(p);
 			Box * box = container( pos );
 			if( box->frame < frame )
@@ -57,7 +57,7 @@ void Fluid::addFluid(float dt)
 		}
 	}
 	/*/
-	for( float y = 0; y < 6; y += 0.1 )
+	for( float y = 0; y < 3; y += 0.1 )
 	{
 		for( float x = -0.5; x < 0.5; x += 0.1 )
 		{
@@ -67,7 +67,7 @@ void Fluid::addFluid(float dt)
 				float ry = 0.01*(float)rand() / RAND_MAX; 
 				float rz = 0.01*(float)rand() / RAND_MAX; 
 				vec3 pos(x+rx, y+ry, z+rz);
-				Particle * p = new Particle(1500, 1, pos, glm::vec3(0));
+				Particle * p = new Particle(1000, 1, pos, glm::vec3(0));
 				theParticles.push_back(p);
 				Box * box = container( pos );
 				if( box->frame < frame )
@@ -89,7 +89,7 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 8000 && frame % 15 == 0)
+	if (theParticles.size() < 800)//0 && frame % 15 == 0)
 		addFluid(dt);
 	findNeighbors();
 	computeDensity(dt);
@@ -213,7 +213,7 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i)->getVelocity()) / neighbors.at(j)->getDensity();
 		v += neighbors.at(j)->getMass()*vel*wViscosityLap( r, h );
 	}
-	return 15.f*v; 
+	return 70.f*v; 
 }
 
 glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
@@ -304,38 +304,38 @@ void Fluid::resolveCollisions()
 			updated = true;
 			//Normal of wall is 
 			pos.x = -3;
-			vel.x *= -0.9;
+			vel.x *= -0.7;
 		}
 		if (pos.y < 0) {
 			glm::vec3 normal = glm::vec3(0, 1.0, 0); 
 			updated = true;
 			pos.y = 0;
-			vel.y *= -0.9;  
+			vel.y *= -0.7;  
 		}
-		if (pos.z < -3) {
+		if (pos.z < -1) {
 			glm::vec3 normal = glm::vec3(0, 0, 1); 
 			updated = true;
-			pos.z = -3;
-			vel.z *= -0.9; 
+			pos.z = -1;
+			vel.z *= -0.7; 
 		}
 
-		if (pos.x > 3) {
+		if (pos.x > 1) {
 			glm::vec3 normal = glm::vec3(-1, 0, 0); 
 			updated = true;
-			pos.x = 3;
-			vel.x *= -0.9;
+			pos.x = 1;
+			vel.x *= -0.7;
 		}
 		if (pos.y > 6) {
 			glm::vec3 normal = glm::vec3(0, -1.0, 0); 
 			updated = true;
 			pos.y = 6;
-			vel.y *= -0.9;  
+			vel.y *= -0.7;  
 		}
-		if (pos.z > 3) {
+		if (pos.z > 1) {
 			glm::vec3 normal = glm::vec3(0, 0, -1.0); 
 			updated = true;
-			pos.z = 3;
-			vel.z *= -0.9; 
+			pos.z = 1;
+			vel.z *= -0.7; 
 		}
 
 		if (updated)
