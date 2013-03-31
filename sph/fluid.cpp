@@ -4,18 +4,36 @@
 //Globals
 const double h = 0.1;
 const double k = 300; //TODO - make this function dependant on the temp
-
 const double PI = 3.14159265; 
+
+const bool loadFromMesh = true; 
+
+//Container size 
+const vec3 containerMin(-3, 0, -3);
+const vec3 containerMax(3, 6, 3); 
 
 Fluid::Fluid(void) : container( 40, 40, 40, vec3( -3, 0, -3 ), vec3( 3, 6, 3 ) )
 {
 	frame = 0;
 	/*srand (time(NULL));*/
+
+	if (loadFromMesh == true)
+	{
+		theMesh = new obj();
+		string file = "..\\stanford_bunny\\bunny_scaled.obj";  
+		//string file = "..\\bunny.obj";
+		objLoader* loader = new objLoader( file, theMesh );
+		theMesh->buildVBOs();
+		delete loader;
+
+		cout<<"The mesh size: "<<(*theMesh->getFaces()).size()<<endl; 
+	}
 }
 
 
 Fluid::~Fluid(void)
 {
+	delete theMesh;
 }
 
 //Draws the current frame 
@@ -29,6 +47,144 @@ void Fluid::Reset()
 {
 
 }
+
+/*
+P0 = the point. 
+V0 = the ray direction
+p1, p2, p3 are the points on the triangle
+*/
+float Fluid::rayTriangleIntersect(vec3 const& P0, vec3 const& V0, vec3 const& p1, vec3 const& p2, vec3 const& p3)
+{
+	vec3 rayDirection = V0;
+	vec3 rayOrigin = P0;
+
+	/*
+	point(u,v) = (1-u-v)*p0 + u*p1 + v*p2
+	where u, v >= 0
+	intersect ray: rayOrigin + t * rayDirection = (1 - u - v)*p0  + u*p1 + v*p2
+	*/
+	float f, u, v; //cooefficient & barycentric coords
+
+	//Calculate the triangle's edges
+	vec3 e1 = p2 - p1;
+	vec3 e2 = p3 - p1;
+
+	//N cross X = d
+	//using normals from triangles & ray dir, calc cooefficient
+	vec3 h = cross(rayDirection, e2);
+	f = 1 / dot(e1, h);
+
+	//Calc barycentric coordinate for u
+	vec3 s = rayOrigin - p1;
+	u = f * (dot(s, h));
+
+	if (u < 0.0 || u > 1.0)
+		return -1;
+
+	//Calc the barycentric coord for v
+	vec3 q = cross(s, e1);
+	v = f * dot(rayDirection, q);
+
+	if (v < 0.0 || u + v > 1.0) {
+		return -1;
+	}
+
+	//Ray intersection
+	//float dotTest = dot(e2, q);
+	float t = f * dot(e2, q);
+	if (t > 0.00001) {
+		return t;
+	} else {
+		return -1;
+	}
+}
+
+
+bool Fluid::rayCubeIntersect(vec3 const& P0) {
+
+	float xMax = theMesh->xmax;
+	float xMin = theMesh->xmin;
+	float yMax = theMesh->ymax;
+	float yMin = theMesh->ymin;
+	float zMax = theMesh->zmax;
+	float zMin = theMesh->zmin;
+
+	if (P0.x > xMin && P0.x < xMax)
+	{
+		if (P0.y > yMin && P0.y < yMax)
+		{
+			if (P0.z > zMin && P0.z < zMax)
+			{
+				return true; 
+			}
+		}
+	}
+
+
+	return false;
+}
+
+bool Fluid::insideOutside(vec3 p)
+{
+	//Check if inside the bounding box
+	if (rayCubeIntersect(p) == true)
+	{
+		int numIntersects = 0; 
+		vector<vec4> points = *theMesh->getPoints(); 
+		for (int i = 0; i < (*theMesh->getFaces()).size(); i++)
+		//Then check if its actually inside the mesh
+		{
+			vector<int> face = (*theMesh->getFaces()).at(i); 
+			glm::vec3 p1(points[face[0]].x, points[face[0]].y, points[face[0]].z);
+			glm::vec3 p2(points[face[1]].x, points[face[1]].y, points[face[1]].z);
+			glm::vec3 p3(points[face[2]].x, points[face[2]].y, points[face[2]].z);
+			if (rayTriangleIntersect(p, vec3(0, 1, 0), p1, p2, p3) != -1) {
+				numIntersects++;
+			}
+		}
+		if (numIntersects % 2 == 0)
+			return false;
+		else 
+			return true;
+	} 
+	
+	return false; 
+}
+
+//Creates particles inside of theMesh obj
+void Fluid::createParticlesFromMesh()
+{
+	//Run through the grid & add particles if we are inside the mesh
+	for (float x = containerMin.x; x < containerMax.x; x+= 0.2)
+	{
+		for (float y = containerMin.y; y < containerMax.y; y+=0.2 )
+		{
+			for (float z = containerMin.z; z < containerMax.z; z+=0.2)
+			{
+				vec3 pos(x, y, z); 
+				if (insideOutside(pos) == true) {
+					//Make a little random
+					float rx = 0.001*((double) rand() / (RAND_MAX)); 
+					float ry = 0.001*((double) rand() / (RAND_MAX)); 
+					float rz = 0.001*((double) rand() / (RAND_MAX)); 
+					pos.x += rx;
+					pos.y += ry;
+					pos.z += rz;
+					Particle * p = new Particle(1500, 1, pos, glm::vec3(0.0, 0.0, 0.0));
+					theParticles.push_back(p);
+					Box * box = container( pos );
+					if( box->frame < frame )
+					{
+						box->particles.clear();
+						box->frame = frame;
+					}
+					box->particles.push_back( p );
+				}
+			}
+		}
+	}
+}
+
 
 //Initialize fluid from some point
 void Fluid::addFluid(float dt)
@@ -57,7 +213,7 @@ void Fluid::addFluid(float dt)
 		}
 	}
 	/*/
-	for( float y = 0; y < 6; y += 0.1 )
+	for( float y = 0; y < 0.5; y += 0.1 )
 	{
 		for( float x = -0.5; x < 0.5; x += 0.1 )
 		{
@@ -89,8 +245,11 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, glm::vec3& externalForces)
 {
-	if (theParticles.size() < 8000 && frame % 15 == 0)
+	if (loadFromMesh == true && frame == 0) {
+		createParticlesFromMesh();
+	} else if (loadFromMesh == false && theParticles.size() < 8000 && frame % 15 == 0) {
 		addFluid(dt);
+	}
 	findNeighbors();
 	computeDensity(dt);
 	computeForces(dt, externalForces);
@@ -260,33 +419,51 @@ void Fluid::integrate(float dt)
 		p->setPostion(p->getPosition() + dt * p->getVelocity());
 	}
 
-	////************Leap frog start **************************
-	////http://en.wikipedia.org/wiki/Leapfrog_integration	& http://ursa.as.arizona.edu/~rad/phys305/ODE_III/node11.html
-	////Compute x + 1/2
-	//std::vector<glm::vec3> accel0; 
+	////*********************************************************************
+	////Leapfrog 
+	//std::vector<glm::vec3> accel1; 
 	//for (int i = 0; i < theParticles.size(); i++)
 	//{
-	//	vec3 a = theParticles.at(i)->getForce() / theParticles.at(i)->getDensity();
-	//	if (frame == 0) 
-	//		theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + 0.5f * theParticles.at(i)->getVelocity() * dt + 0.25f * a * dt *dt); 
-	//	else 
-	//		theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + 0.5f * theParticles.at(i)->getVelocity() * dt); 
-	//	accel0.push_back(a); 
-	//}
 
-	////Recompute forces to get new accel
-	////To get the new forces, we need to find the new densities (computed from neighbors) ->TODO: is there a better way?!
-	//Fluid::findNeighbors();
-	//Fluid::computeDensity(dt);
-	//Fluid::computeForces(dt, vec3(0, -9.8, 0));  
 
-	////Compute v + 1 & x + 1
-	//for (int i = 0; i < theParticles.size(); i++)
-	//{
-	//	vec3 avgAccel = (accel0.at(i) + theParticles.at(i)->getForce() / theParticles.at(i)->getDensity()) / 2.0f; 
-	//	theParticles.at(i)->setVelocity(theParticles.at(i)->getVelocity() + avgAccel * dt); 
-	//	theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + 0.5f * theParticles.at(i)->getVelocity() *dt);
+
+	//	//Acceleration at v + 1
+	//	vec3 a = theParticles.at(i)->getForce() / theParticles.at(i)->getDensity(); 
+	//	accel1.push_back(a);
+
+	//	//if (i < 10)
+	//	//{
+	//	//	cout<<"Particle "<<i<<endl;
+	//	//	cout<<"Pos: "<< theParticles.at(i)->getPosition().x<<" "<<theParticles.at(i)->getPosition().y<<" "<<theParticles.at(i)->getPosition().z<<endl;
+	//	//	cout<<"Vel: " << theParticles.at(i)->getVelocity().x<<" "<<theParticles.at(i)->getVelocity().y<<" "<<theParticles.at(i)->getVelocity().z<<endl;
+	//	//	cout<<"New accel: "<<a.x<<" " <<a.y<<" "<<a.z<<endl;
+	//	//	if (accel0.size() >= 10)
+	//	//	{
+	//	//		cout<<"Old accel: "<<accel0.at(i).x<<" "<<accel0.at(i).y<<" "<<accel0.at(i).z<<endl;
+	//	//	}
+	//	//	cout<<endl;
+	//	//}
+
+	//	//Get v 1/2
+	//	vec3 velHalfStep;	
+	//	if (i >= accel0.size() || accel0.size() == 0) {
+	//		velHalfStep = theParticles.at(i)->getVelocity() + 0.5f * vec3(0, -9.8, 0) * dt; 
+	//		theParticles.at(i)->setVelocity(velHalfStep); 
+	//	} 
+	//	else {
+	//		if ( accel0.at(i) != accel0.at(i))
+	//			std::cout<<"Error in stored acceleration"<<std::endl;
+	//		velHalfStep = theParticles.at(i)->getVelocity() + 0.5f * (accel0.at(i))* dt; 
+	//	}
+
+	//	//Get next postion with half step vel
+	//	if (i <= accel0.size() && accel0.size() != 0) {
+	//		theParticles.at(i)->setVelocity(velHalfStep + 0.5f * a * dt);
+	//	}		
+	//	theParticles.at(i)->setPostion(theParticles.at(i)->getPosition() + theParticles.at(i)->getVelocity() * dt); 
 	//}
+	//accel0.clear();
+	//accel0 = accel1; 
 }
 
 void Fluid::resolveCollisions()
