@@ -10,6 +10,9 @@
 #include "particle.h"
 #include "container.h"
 
+#include "..\ObjCore\obj.h"
+#include "..\ObjCore\objloader.h"
+
 using namespace glm;
 
 class Fluid
@@ -55,16 +58,27 @@ public:
 	// Reset to the initial state
     virtual void Reset();
 
+	//Creates the particles from an imported mesh obj
+	bool insideOutside(vec3 p);
+	void createParticlesFromMesh(); 
+	float rayTriangleIntersect(vec3 const& P0, vec3 const& V0, vec3 const& p1, vec3 const& p2, vec3 const& p3); 
+	bool rayCubeIntersect(vec3 const& P0);
+
 	//Draws the current frame 
     virtual void Draw(const glm::vec3& eyePos);
 
 	int frame;
 	Container container;
+
 protected:
+	//If we create the particles from a mesh
+	obj* theMesh; 
+
 	//Info to draw to the screen
 	int numRows, numCols, numStacks; 
 	unsigned int drawFlags;
 	
 	std::vector<Particle *> theParticles; 
+	std::vector<glm::vec3> accel0; 
 };
 

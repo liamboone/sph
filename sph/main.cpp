@@ -13,6 +13,8 @@
 
 #include "fluid.h"
 #include "display.h"
+#include "..\ObjCore\obj.h"
+#include "..\ObjCore\objloader.h"
 
 #include <IL/il.h>
 #include <IL/ilu.h>
@@ -39,6 +41,7 @@ void mouseClick_cb(int, int, int, int);
 
 Display display;
 Fluid theFluid;
+
 
 int main(int argc, char** argv) 
 {
@@ -180,7 +183,7 @@ void display_cb() {
 	if( play || singleStep )
 	{
 		singleStep = false;
-		theFluid.Update(0.003, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.004, glm::vec3(0, -9.8, 0)); 
 	}
 	display.draw();
 	if (isRecording) grabScreen(); 
