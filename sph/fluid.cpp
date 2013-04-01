@@ -2,15 +2,19 @@
 #include <iostream>
 
 //Globals
-const double h = 0.1;
-const double k = 700; //TODO - make this function dependant on the temp
-const double PI = 3.14159265; 
+const float h = 0.145;
+const float k = 50; //TODO - make this function dependant on the temp
+const float PI = 3.14159265; 
+const float mu = 60.f;
+const float sigma = 70.0f;
+const float restDensity = 750.0f;
+const float mass = 1.0f;
 
 const bool loadFromMesh = true; 
 
 //Container size 
-const vec3 containerMin(-3, 0, -3);
-const vec3 containerMax(3, 6, 3); 
+const vec3 containerMin(-2, 0, -2);
+const vec3 containerMax(2, 6, 2); 
 
 Fluid::Fluid(void) : container( 40, 40, 40, containerMin, containerMax)
 {
@@ -20,7 +24,7 @@ Fluid::Fluid(void) : container( 40, 40, 40, containerMin, containerMax)
 	if (loadFromMesh == true)
 	{
 		theMesh = new obj();
-		string file = "..\\stanford_bunny\\bunny_scaled2.obj";  
+		string file = "..\\stanford_bunny\\bunny_scaled4.obj";  
 		//string file = "..\\bunny.obj";
 		objLoader* loader = new objLoader( file, theMesh );
 		theMesh->buildVBOs();
@@ -156,11 +160,11 @@ bool Fluid::insideOutside(vec3 p)
 void Fluid::createParticlesFromMesh()
 {
 	//Run through the grid & add particles if we are inside the mesh
-	for (float x = containerMin.x; x < containerMax.x; x+= 0.4)
+	for (float x = containerMin.x; x < containerMax.x; x+= 0.1)
 	{
-		for (float y = containerMin.y; y < containerMax.y; y+=0.4 )
+		for (float y = containerMin.y; y < containerMax.y; y+=0.1 )
 		{
-			for (float z = containerMin.z; z < containerMax.z; z+=0.4)
+			for (float z = containerMin.z; z < containerMax.z; z+=0.1)
 			{
 				vec3 pos(x, y, z); 
 				if (insideOutside(pos) == true) {
@@ -171,24 +175,15 @@ void Fluid::createParticlesFromMesh()
 					pos.x += rx;
 					pos.y += ry;
 					pos.z += rz;
-					for( float sx = 0.0; sx < 0.2; sx += 0.1 )
+					Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0.0, 0.0, 0.0));
+					theParticles.push_back(p);
+					Box * box = container( pos );
+					if( box->frame < frame )
 					{
-						for( float sy = 0.0; sy < 0.2; sy += 0.1 )
-						{
-							for( float sz = 0.0; sz < 0.2; sz += 0.1 )
-							{
-								Particle * p = new Particle(1500, 1, pos + vec3(sx, sy, sz), glm::vec3(0.0, 0.0, 0.0));
-								theParticles.push_back(p);
-								Box * box = container( pos );
-								if( box->frame < frame )
-								{
-									box->particles.clear();
-									box->frame = frame;
-								}
-								box->particles.push_back( p );
-							}
-						}
+						box->particles.clear();
+						box->frame = frame;
 					}
+					box->particles.push_back( p );
 				}
 			}
 		}
@@ -200,18 +195,18 @@ void Fluid::createParticlesFromMesh()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	/*
+	//*
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
-		for (float y = 1.8; y < 2.2; y += 0.1 )
+		for (float y = -0.2; y < 0.2; y += 0.1 )
 		{
 			float rx = 0.01*((double) rand() / (RAND_MAX)); 
 			float ry = 0.01*((double) rand() / (RAND_MAX)); 
 			float rz = 0.01*((double) rand() / (RAND_MAX)); 
 			
-			vec3 pos(rx-1.5, y+ry, z+rz);
+			vec3 pos(rx+2, y+ry+2.5, z+rz);
 			//Density, mass, position, velocity (particle inputs)
-			Particle * p = new Particle(700, 1, pos, glm::vec3(-3, 0.0, 0.0));
+			Particle * p = new Particle(restDensity, mass, pos, glm::vec3(-3, 0, 0.0));
 			theParticles.push_back(p);
 			Box * box = container( pos );
 			if( box->frame < frame )
@@ -258,8 +253,33 @@ void Fluid::Update(float dt, glm::vec3& externalForces)
 {
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
-	} else if (loadFromMesh == false && theParticles.size() < 8000 && frame % 15 == 0) {
+	} else if (loadFromMesh == false && theParticles.size() < 8000 && frame % 9 == 0) {
 		addFluid(dt);
+		if( frame == -1 )
+		{
+			for( float y = 0; y < 0.3; y += 0.1 )
+			{
+				for( float x = containerMin.x; x < containerMax.x; x += 0.15 )
+				{
+					for( float z = containerMin.z; z < containerMax.z; z += 0.15 )
+					{
+						float rx = 0.01*(float)rand() / RAND_MAX; 
+						float ry = 0.01*(float)rand() / RAND_MAX; 
+						float rz = 0.01*(float)rand() / RAND_MAX; 
+						vec3 pos(x+rx, y+ry, z+rz);
+						Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0));
+						theParticles.push_back(p);
+						Box * box = container( pos );
+						if( box->frame < frame )
+						{
+							box->particles.clear();
+							box->frame = frame;
+						}
+						box->particles.push_back( p );
+					}
+				}
+			}
+		}
 	}
 	findNeighbors();
 	computeDensity(dt);
@@ -383,7 +403,7 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i)->getVelocity()) / neighbors.at(j)->getDensity();
 		v += neighbors.at(j)->getMass()*vel*wViscosityLap( r, h );
 	}
-	return 70.f*v; 
+	return mu*v; 
 }
 
 glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
@@ -403,7 +423,7 @@ glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
 
 	k = -k / (glm::length(n) + 1e-15f); 
 	n =  n / (glm::length(n) + 1e-15f);
-	return 50.f * k * n; 
+	return sigma * k * n; 
 }
 
 
@@ -492,38 +512,38 @@ void Fluid::resolveCollisions()
 			updated = true;
 			//Normal of wall is 
 			pos.x = containerMin.x;
-			vel.x *= -0.9;
+			vel.x *= -0.5;
 		}
 		if (pos.y < containerMin.y) {
 			glm::vec3 normal = glm::vec3(0, 1.0, 0); 
 			updated = true;
 			pos.y = containerMin.y;
-			vel.y *= -0.9;  
+			vel.y *= -0.5;  
 		}
 		if (pos.z < containerMin.z) {
 			glm::vec3 normal = glm::vec3(0, 0, 1); 
 			updated = true;
 			pos.z = containerMin.z;
-			vel.z *= -0.9; 
+			vel.z *= -0.5; 
 		}
 
 		if (pos.x > containerMax.x) {
 			glm::vec3 normal = glm::vec3(-1, 0, 0); 
 			updated = true;
 			pos.x = containerMax.x;
-			vel.x *= -0.9;
+			vel.x *= -0.5;
 		}
 		if (pos.y > containerMax.y) {
 			glm::vec3 normal = glm::vec3(0, -1.0, 0); 
 			updated = true;
 			pos.y = containerMax.y;
-			vel.y *= -0.9;  
+			vel.y *= -0.5;  
 		}
 		if (pos.z > containerMax.z) {
 			glm::vec3 normal = glm::vec3(0, 0, -1.0); 
 			updated = true;
 			pos.z = containerMax.z;
-			vel.z *= -0.9; 
+			vel.z *= -0.5; 
 		}
 
 		if (updated)

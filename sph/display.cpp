@@ -127,7 +127,7 @@ void Display::init()
 	u_shadowProjMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_projMatrix");
 
 	lightCol = vec3( 1.0f, 1.0f, 1.0f );
-	lightPos = vec3( 5.0f, 10.0f, 3.0f );
+	lightPos = vec3( -5.0f, 10.0f, 3.0f );
 
 	camera->setViewport( 640, 480 );
 
@@ -254,7 +254,7 @@ void Display::draw()
 	{
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale( vec3( clamp( particles.at(i)->getNeighbors().size()/100.0f, 0.01f, 0.1f )) );
+		particle->scale( vec3( 0.07 ) );
 		particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 		delete particle;
 	}
@@ -291,8 +291,7 @@ void Display::draw()
 	{
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale( vec3( clamp( particles.at(i)->getNeighbors().size()/100.0f, 0.01f, 0.1f ) ));
-		Box *box = theFluid->container( particles.at(i)->getPosition() );
+		particle->scale( vec3( 0.07 ) );
 		particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 		delete particle;

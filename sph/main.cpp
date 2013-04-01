@@ -25,12 +25,15 @@ using namespace glm;
 
 int theFrameNum = 0; 
 bool isRecording = false;
+bool displayOn = true;
 
 int buttonPress;
 int old_X;
 int old_Y;
 bool play = false;
 bool singleStep = false;
+int screenWidth = 640;
+int screenHeight = 480;
 
 void resize_cb(int, int);
 void display_cb(void);
@@ -126,6 +129,9 @@ void keypress_cb(unsigned char key, int x, int y) {
 	case '.':
 		singleStep = true;
 		break;
+	case 'd':
+		displayOn = !displayOn;
+		break;
 	case 'r':
 		isRecording = !isRecording; 
 		if (isRecording) theFrameNum = 0;
@@ -144,7 +150,7 @@ void grabScreen()
     ILenum error = ilGetError();
     assert(error == IL_NO_ERROR);
 
-    ilTexImage(640, 480, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, NULL);
+	ilTexImage(screenWidth, screenHeight, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, NULL);
 
     error = ilGetError();
     assert(error == IL_NO_ERROR);
@@ -154,14 +160,14 @@ void grabScreen()
     error = ilGetError();
     assert(error == IL_NO_ERROR);
 
-    for (int i=479; i>=0; i--) 
+    for (int i=screenHeight-1; i>=0; i--) 
     {
-	    glReadPixels(0,i,640,1,GL_RGB, GL_UNSIGNED_BYTE, 
-		    data + (640 * 3 * i));
+	    glReadPixels(0,i,screenWidth,1,GL_RGB, GL_UNSIGNED_BYTE, 
+		    data + (screenWidth * 3 * i));
     }
 
-    char anim_filename[2048];
-    sprintf_s(anim_filename, 2048, "output/%04d.png", theFrameNum++); 
+    char anim_filename[100];
+    sprintf_s(anim_filename, 100, "output/%04d.png", theFrameNum++); 
 
     ilSave(IL_PNG, anim_filename);
 
@@ -184,15 +190,23 @@ void display_cb() {
 	{
 		singleStep = false;
 		theFluid.Update(0.004, glm::vec3(0, -9.8, 0)); 
+		/*theFluid.Update(0.0008, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.0008, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.0008, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.0008, glm::vec3(0, -9.8, 0));  */
 	}
-	display.draw();
-	if (isRecording) grabScreen(); 
-
+	if( displayOn )
+	{
+		display.draw();
+		if (isRecording) grabScreen(); 
+	}
 	glutSwapBuffers();
 }
 
 void resize_cb(int width, int height) {
 	//set the viewport, more boilerplate
+	screenWidth = width;
+	screenHeight = height;
 	glViewport(0, 0, width, height);
 
 	display.updateViewport( width, height );
