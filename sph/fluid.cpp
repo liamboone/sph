@@ -12,7 +12,7 @@ const bool loadFromMesh = true;
 const vec3 containerMin(-3, 0, -3);
 const vec3 containerMax(3, 6, 3); 
 
-Fluid::Fluid(void) : container( 40, 40, 40, vec3( -3, 0, -3 ), vec3( 3, 6, 3 ) )
+Fluid::Fluid(void) : container( 40, 40, 40, containerMin, containerMax)
 {
 	frame = 0;
 	/*srand (time(NULL));*/
@@ -20,7 +20,7 @@ Fluid::Fluid(void) : container( 40, 40, 40, vec3( -3, 0, -3 ), vec3( 3, 6, 3 ) )
 	if (loadFromMesh == true)
 	{
 		theMesh = new obj();
-		string file = "..\\stanford_bunny\\bunny_scaled.obj";  
+		string file = "..\\stanford_bunny\\bunny_scaled2.obj";  
 		//string file = "..\\bunny.obj";
 		objLoader* loader = new objLoader( file, theMesh );
 		theMesh->buildVBOs();
@@ -33,7 +33,8 @@ Fluid::Fluid(void) : container( 40, 40, 40, vec3( -3, 0, -3 ), vec3( 3, 6, 3 ) )
 
 Fluid::~Fluid(void)
 {
-	delete theMesh;
+	if ( loadFromMesh == true) 
+		delete theMesh;
 }
 
 //Draws the current frame 
@@ -155,11 +156,11 @@ bool Fluid::insideOutside(vec3 p)
 void Fluid::createParticlesFromMesh()
 {
 	//Run through the grid & add particles if we are inside the mesh
-	for (float x = containerMin.x; x < containerMax.x; x+= 0.2)
+	for (float x = containerMin.x; x < containerMax.x; x+= 0.4)
 	{
-		for (float y = containerMin.y; y < containerMax.y; y+=0.2 )
+		for (float y = containerMin.y; y < containerMax.y; y+=0.4 )
 		{
-			for (float z = containerMin.z; z < containerMax.z; z+=0.2)
+			for (float z = containerMin.z; z < containerMax.z; z+=0.4)
 			{
 				vec3 pos(x, y, z); 
 				if (insideOutside(pos) == true) {
@@ -170,15 +171,24 @@ void Fluid::createParticlesFromMesh()
 					pos.x += rx;
 					pos.y += ry;
 					pos.z += rz;
-					Particle * p = new Particle(1500, 1, pos, glm::vec3(0.0, 0.0, 0.0));
-					theParticles.push_back(p);
-					Box * box = container( pos );
-					if( box->frame < frame )
+					for( float sx = 0.0; sx < 0.2; sx += 0.1 )
 					{
-						box->particles.clear();
-						box->frame = frame;
+						for( float sy = 0.0; sy < 0.2; sy += 0.1 )
+						{
+							for( float sz = 0.0; sz < 0.2; sz += 0.1 )
+							{
+								Particle * p = new Particle(1500, 1, pos + vec3(sx, sy, sz), glm::vec3(0.0, 0.0, 0.0));
+								theParticles.push_back(p);
+								Box * box = container( pos );
+								if( box->frame < frame )
+								{
+									box->particles.clear();
+									box->frame = frame;
+								}
+								box->particles.push_back( p );
+							}
+						}
 					}
-					box->particles.push_back( p );
 				}
 			}
 		}
@@ -476,42 +486,42 @@ void Fluid::resolveCollisions()
 		glm::vec3 vel = theParticles.at(i)->getVelocity();
 		bool updated = false;
 		//For now, don't handle corners
-		if (pos.x < -3) {
+		if (pos.x < containerMin.x) {
 			glm::vec3 normal = glm::vec3(1, 0, 0); 
 			updated = true;
 			//Normal of wall is 
-			pos.x = -3;
+			pos.x = containerMin.x;
 			vel.x *= -0.9;
 		}
-		if (pos.y < 0) {
+		if (pos.y < containerMin.y) {
 			glm::vec3 normal = glm::vec3(0, 1.0, 0); 
 			updated = true;
-			pos.y = 0;
+			pos.y = containerMin.y;
 			vel.y *= -0.9;  
 		}
-		if (pos.z < -3) {
+		if (pos.z < containerMin.z) {
 			glm::vec3 normal = glm::vec3(0, 0, 1); 
 			updated = true;
-			pos.z = -3;
+			pos.z = containerMin.z;
 			vel.z *= -0.9; 
 		}
 
-		if (pos.x > 3) {
+		if (pos.x > containerMax.x) {
 			glm::vec3 normal = glm::vec3(-1, 0, 0); 
 			updated = true;
-			pos.x = 3;
+			pos.x = containerMax.x;
 			vel.x *= -0.9;
 		}
-		if (pos.y > 6) {
+		if (pos.y > containerMax.y) {
 			glm::vec3 normal = glm::vec3(0, -1.0, 0); 
 			updated = true;
-			pos.y = 6;
+			pos.y = containerMax.y;
 			vel.y *= -0.9;  
 		}
-		if (pos.z > 3) {
+		if (pos.z > containerMax.z) {
 			glm::vec3 normal = glm::vec3(0, 0, -1.0); 
 			updated = true;
-			pos.z = 3;
+			pos.z = containerMax.z;
 			vel.z *= -0.9; 
 		}
 

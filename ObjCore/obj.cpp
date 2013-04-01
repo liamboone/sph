@@ -161,6 +161,11 @@ void obj::addPoint(glm::vec3 point){
         ymin = point[1]; ymax = point[1];
         zmin = point[2]; zmax = point[2];
     }
+	if (point[0] != 0)
+	{
+		int x = 1;
+		x++;
+	}
     
     points.push_back(glm::vec4(point[0], point[1], point[2], 1));
     

@@ -30,7 +30,6 @@ private:
 	float* boundingbox;
 	float top;
 	glm::vec3 defaultColor;
-	float xmax; float xmin; float ymax; float ymin; float zmax; float zmin; 
 	bool maxminSet;
 public:
 	obj();
@@ -49,6 +48,8 @@ public:
 	void compareMaxMin(float, float, float);
 	bool isConvex(vector<int>);
 	void recenter();
+
+	float xmax; float xmin; float ymax; float ymin; float zmax; float zmin; 
 
 	//-------------------------------
 	//-------Get/Set Operations------
