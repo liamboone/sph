@@ -200,6 +200,10 @@ void display_cb() {
 		display.draw();
 		if (isRecording) grabScreen(); 
 	}
+	else
+	{
+		display.march();
+	}
 	glutSwapBuffers();
 }
 

@@ -106,5 +106,14 @@
     <None Include="object.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="fsq.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="fsq.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="fsq.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

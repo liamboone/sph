@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #define SHADOW_MAP_SIZE 1024
+#define DMAP_SIZE 128
 
 //BEGIN glsl utilities
 // from swiftless.com
@@ -122,9 +123,14 @@ void Display::init()
 	u_camPositionLocation		= glGetUniformLocation(shaderProgram, "u_camPosition");
 	u_shadowMapLocation			= glGetUniformLocation(shaderProgram, "u_shadowMap");
 	u_shadowBiasMatrixLocation	= glGetUniformLocation(shaderProgram, "u_shadowProjMatrix");
+
+	u_resolutionLocation		= glGetUniformLocation(raymarchShaderProgram, "u_resolution");
+	u_rayCamPositionLocation	= glGetUniformLocation(raymarchShaderProgram, "u_camPosition");
+	u_distanceMapLocation		= glGetUniformLocation(raymarchShaderProgram, "u_distanceMap");
 	
 	u_shadowModelMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_modelMatrix");
 	u_shadowProjMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_projMatrix");
+	
 
 	lightCol = vec3( 1.0f, 1.0f, 1.0f );
 	lightPos = vec3( -5.0f, 10.0f, 3.0f );
@@ -141,6 +147,10 @@ void Display::init()
 	glUniform3f(u_lightPositionLocation, lightPos.x, lightPos.y, lightPos.z );
 	glUniform3f(u_lightColorLocation, lightCol.x, lightCol.y, lightCol.z );
 	glUniform3f(u_camPositionLocation, cpos.x, cpos.y, cpos.z );
+
+	glUseProgram(raymarchShaderProgram);
+	glUniform2f(u_resolutionLocation, camera->getWidth(), camera->getHeight() );
+	glUniform3f(u_rayCamPositionLocation, cpos.x, cpos.y, cpos.z );
 	
 	// The framebuffer
 	glGenFramebuffers(1, &fbo);
@@ -162,23 +172,44 @@ void Display::init()
  
 	// Always check that our framebuffer is ok
 	assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	// request 1 texture name from OpenGL
+	glGenTextures(1, &fluidTexture);	
+	// tell OpenGL we're going to be setting up the texture name it gave us	
+	glBindTexture(GL_TEXTURE_3D, fluidTexture);	
+	// when this texture needs to be shrunk to fit on small polygons, use linear interpolation of the texels to determine the color
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// when this texture needs to be magnified to fit on a big polygon, use linear interpolation of the texels to determine the color
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// we want the texture to repeat over the S axis, so if we specify coordinates out of range we still get textured.
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	// same as above for T axis
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// same as above for R axis
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
 }
 
-void Display::loadShader( const char* vertFile, const char* fragFile, Shader & shader )
+void Display::loadShader( const char* vertFile, const char* fragFile, const char* geomFile, Shader & shader )
 {
 	shader.vertex = glCreateShader(GL_VERTEX_SHADER);
 	shader.fragment = glCreateShader(GL_FRAGMENT_SHADER);
+	if( geomFile != NULL ) shader.geometry = glCreateShader(GL_GEOMETRY_SHADER);
 	shader.program = glCreateProgram();
 	
 	//load up the source, compile and link the shader program
 	const char* vertSource = textFileRead(vertFile);
 	const char* fragSource = textFileRead(fragFile);
+	const char* geomSource = NULL;
+	if( geomFile != NULL ) geomSource = textFileRead(geomFile);
 	glShaderSource(shader.vertex, 1, &vertSource, 0);
 	glShaderSource(shader.fragment, 1, &fragSource, 0);
+	if( geomFile != NULL ) glShaderSource(shader.geometry, 1, &geomSource, 0);
 	glCompileShader(shader.vertex);
 	glCompileShader(shader.fragment);
+	if( geomFile != NULL ) glCompileShader(shader.geometry);
 
 	//For your convenience, i decided to throw in some compiler/linker output helper functions
 	//from CIS 565
@@ -193,10 +224,18 @@ void Display::loadShader( const char* vertFile, const char* fragFile, Shader & s
 	{
 		printShaderInfoLog(shader.fragment);
 	} 
-	
+	if( geomFile != NULL )
+	{
+		glGetShaderiv(shader.geometry, GL_COMPILE_STATUS, &compiled);
+		if (!compiled)
+		{
+			printShaderInfoLog(shader.geometry);
+		} 
+	}
 	//finish shader setup
 	glAttachShader(shader.program, shader.vertex);
 	glAttachShader(shader.program, shader.fragment);
+	if( geomFile != NULL ) glAttachShader(shader.program, shader.geometry);
 	glLinkProgram(shader.program);
 	
 	//check for linking success
@@ -212,15 +251,18 @@ void Display::loadShader( const char* vertFile, const char* fragFile, Shader & s
 void Display::initShaders()
 {
 	Shader shader;
-	loadShader( "diffuse.vert", "diffuse.frag", shader );
+	loadShader( "diffuse.vert", "diffuse.frag", NULL, shader );
 	shaderProgram = shader.program;
 	glBindAttribLocation(shaderProgram, positionLocation, "vs_position");
 	glBindAttribLocation(shaderProgram, normalLocation, "vs_normal");
 	glBindAttribLocation(shaderProgram, colorLocation, "vs_color");
 
-	loadShader( "shadow.vert", "shadow.frag", shader );
+	loadShader( "shadow.vert", "shadow.frag", NULL, shader );
 	shadowShaderProgram = shader.program;
 	glBindAttribLocation(shadowShaderProgram, shadowPositionLocation, "vs_position");
+	
+	loadShader( "fsq.vert", "fsq.frag", "fsq.geom", shader );
+	raymarchShaderProgram = shader.program;
 }
 
 void Display::draw()
@@ -297,6 +339,7 @@ void Display::draw()
 		delete particle;
 	}
 	//END render from camera
+	glBindTexture(GL_TEXTURE_2D,0);
 }
 
 void Display::updateCamera()
@@ -304,11 +347,41 @@ void Display::updateCamera()
 	vec3 cpos = camera->getPos();
 	mat4 cmat = camera->getMat4();
 	
+	glUseProgram(shaderProgram);
 	glUniformMatrix4fv(u_projMatrixLocation, 1, GL_FALSE, &cmat[0][0]);
 	glUniform3f(u_camPositionLocation, cpos.x, cpos.y, cpos.z );
+	
+	glUseProgram(raymarchShaderProgram);
+	glUniform2f(u_resolutionLocation, camera->getWidth(), camera->getHeight() );
+	glUniform3f(u_rayCamPositionLocation, cpos.x, cpos.y, cpos.z );
 }
 
 void Display::setFluids(Fluid *fluid)
 {
 	theFluid = fluid; 
+}
+
+void Display::march()
+{
+	glUseProgram( raymarchShaderProgram );
+	glUniform1i( u_distanceMapLocation, 4 );
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_3D,fluidTexture);
+	
+	float * texels = new float[ DMAP_SIZE*DMAP_SIZE*DMAP_SIZE ];
+	for( int i = 0; i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE; i ++ )
+	{
+		float x = (float)( (i)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6 - 3;
+		float y = (float)( (i/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6;
+		float z = (float)( (i/DMAP_SIZE/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6 - 3;
+		texels[i] = 0.1 - theFluid->field( vec3( x, y, z ) );
+	}
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_INTENSITY16, DMAP_SIZE, DMAP_SIZE, DMAP_SIZE, 0, GL_RED, GL_FLOAT, texels);
+	delete texels;
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//tip the dominoes
+	glBegin(GL_POINTS);
+	glVertex3f(1.0f, 1.0f, 1.0f);
+	glEnd();
 }

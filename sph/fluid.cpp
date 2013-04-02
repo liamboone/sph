@@ -10,7 +10,7 @@ const float sigma = 70.0f;
 const float restDensity = 750.0f;
 const float mass = 1.0f;
 
-const bool loadFromMesh = true; 
+const bool loadFromMesh = false; 
 
 //Container size 
 const vec3 containerMin(-2, 0, -2);
@@ -650,3 +650,20 @@ const std::vector<Particle*>& Fluid::getParticles()
 	return theParticles; 
 }
 
+float Fluid::field( vec3 pos )
+{
+	Box * box = container( pos );
+	std::vector< Particle * >::iterator it;
+	if( box->frame < frame )
+		return 0;
+	std::vector< Particle * > particles = box->particles.at(0)->getNeighbors();
+	float potential = 0;
+	for( it = particles.begin(); it != particles.end(); ++it )
+	{
+		float rho = (*it)->getDensity(); 
+		float r = glm::distance( (*it)->getPosition(), pos );
+		//fPressure = - sum (mj (tempPi + tempPj) / 2 pj * gradient(W(ri - rj, h))
+		potential += (*it)->getMass() / (1e-15f + rho) * wPoly6(r, h); 
+	}
+	return potential;
+}

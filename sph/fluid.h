@@ -30,7 +30,8 @@ public:
 	void Update(float dt, glm::vec3& externalForces);
 	void findNeighbors();
 	void computeDensity(float dt);
-	
+	float field( vec3 pos );
+
 	//Forces 
 	glm::vec3 computePressure(float dt, int i);
 	glm::vec3 computeViscosity(float dt, int i); 

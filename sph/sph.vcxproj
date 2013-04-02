@@ -94,6 +94,9 @@
   <ItemGroup>
     <None Include="diffuse.frag" />
     <None Include="diffuse.vert" />
+    <None Include="fsq.frag" />
+    <None Include="fsq.geom" />
+    <None Include="fsq.vert" />
     <None Include="object.frag" />
     <None Include="object.vert" />
     <None Include="shadow.frag" />

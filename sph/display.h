@@ -24,6 +24,7 @@ struct Shader
 {
 	unsigned int vertex;
 	unsigned int fragment;
+	unsigned int geometry;
 	unsigned int program;
 };
 
@@ -39,6 +40,7 @@ public:
 
 	void init();
 	void draw();
+	void march();
 	void updateCamera();
 	void updateViewport( int w, int h ) { camera->setViewport( w, h ); updateCamera(); }
 	void zoomCamera( int dz ) { camera->zoom( dz ); updateCamera(); }
@@ -46,7 +48,7 @@ public:
 
 private:
 	void initShaders();
-	void loadShader( const char* vertFile, const char* fragFile, Shader & shader );
+	void loadShader( const char* vertFile, const char* fragFile, const char* geomFile, Shader & shader );
 
 	World * world;
 	Camera * camera;
@@ -55,13 +57,15 @@ private:
 	vec3 lightPos;
 	vec3 lightCol;
 
-	//frame buffer / depth texture
+	//frame buffer, textures
 	unsigned int fbo;
 	unsigned int depthTexture;
+	unsigned int fluidTexture;
 
 	//shader stuff
 	unsigned int shaderProgram;
 	unsigned int shadowShaderProgram;
+	unsigned int raymarchShaderProgram;
 
 	//attributes
 	unsigned int shadowPositionLocation;
@@ -81,6 +85,10 @@ private:
 	unsigned int u_shadowProjMatrixLocation;
 	unsigned int u_shadowMapLocation;
 	unsigned int u_shadowBiasMatrixLocation;
+
+	unsigned int u_resolutionLocation;
+	unsigned int u_rayCamPositionLocation;
+	unsigned int u_distanceMapLocation;
 };
 
 #endif
