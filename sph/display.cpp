@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #define SHADOW_MAP_SIZE 1024
-#define DMAP_SIZE 128
+#define DMAP_SIZE 60
 
 //BEGIN glsl utilities
 // from swiftless.com
@@ -185,11 +185,11 @@ void Display::init()
 	// when this texture needs to be magnified to fit on a big polygon, use linear interpolation of the texels to determine the color
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// we want the texture to repeat over the S axis, so if we specify coordinates out of range we still get textured.
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	// same as above for T axis
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	// same as above for R axis
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
 }
 
 void Display::loadShader( const char* vertFile, const char* fragFile, const char* geomFile, Shader & shader )
@@ -374,9 +374,9 @@ void Display::march()
 		float x = (float)( (i)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6 - 3;
 		float y = (float)( (i/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6;
 		float z = (float)( (i/DMAP_SIZE/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6 - 3;
-		texels[i] = 0.1 - theFluid->field( vec3( x, y, z ) );
+		texels[i] = theFluid->field( vec3( x, y, z ) );
 	}
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_INTENSITY16, DMAP_SIZE, DMAP_SIZE, DMAP_SIZE, 0, GL_RED, GL_FLOAT, texels);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, DMAP_SIZE, DMAP_SIZE, DMAP_SIZE, 0, GL_RED, GL_FLOAT, texels);
 	delete texels;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -198,12 +198,12 @@ void display_cb() {
 	if( displayOn )
 	{
 		display.draw();
-		if (isRecording) grabScreen(); 
 	}
 	else
 	{
 		display.march();
 	}
+	if (isRecording) grabScreen(); 
 	glutSwapBuffers();
 }
 

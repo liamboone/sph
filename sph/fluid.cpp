@@ -2,13 +2,14 @@
 #include <iostream>
 
 //Globals
-const float h = 0.145;
-const float k = 50; //TODO - make this function dependant on the temp
+const float radius = 0.1f;
+const float h = 3*radius;
+const float k = 5; //TODO - make this function dependant on the temp
 const float PI = 3.14159265; 
-const float mu = 60.f;
-const float sigma = 70.0f;
-const float restDensity = 750.0f;
-const float mass = 1.0f;
+const float mu = 15.f;
+const float sigma = 5.f;
+const float restDensity = 1000.0f;
+const float mass = restDensity*4.0f/3.0f*PI*radius*radius*radius;
 
 const bool loadFromMesh = false; 
 
@@ -16,7 +17,7 @@ const bool loadFromMesh = false;
 const vec3 containerMin(-2, 0, -2);
 const vec3 containerMax(2, 6, 2); 
 
-Fluid::Fluid(void) : container( 40, 40, 40, containerMin, containerMax)
+Fluid::Fluid(void) : container( 6.0/h, 6.0/h, 6.0/h, containerMin, containerMax)
 {
 	frame = 0;
 	/*srand (time(NULL));*/
@@ -254,14 +255,14 @@ void Fluid::Update(float dt, glm::vec3& externalForces)
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 8000 && frame % 9 == 0) {
-		addFluid(dt);
-		if( frame == -1 )
+		//addFluid(dt);
+		if( frame == 0 )
 		{
-			for( float y = 0; y < 0.3; y += 0.1 )
+			for( float y = 0; y < 3; y += 0.1 )
 			{
-				for( float x = containerMin.x; x < containerMax.x; x += 0.15 )
+				for( float x = containerMin.x/2; x < containerMax.x/2; x += 0.1 )
 				{
-					for( float z = containerMin.z; z < containerMax.z; z += 0.15 )
+					for( float z = containerMin.z/4; z < containerMax.z/4; z += 0.1 )
 					{
 						float rx = 0.01*(float)rand() / RAND_MAX; 
 						float ry = 0.01*(float)rand() / RAND_MAX; 
