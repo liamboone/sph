@@ -12,7 +12,12 @@ Particle::Particle(float den, float m, glm::vec3 pos, glm::vec3 vel)
 	mass = m; 
 	position.x = pos.x; position.y = pos.y; position.z = pos.z; 
 	velocity.x = vel.x; velocity.y = vel.y; velocity.z = vel.z; 
-	viscosity = 1.13; 
+	mu = 15.f; 
+	/*const float sigma = 5.f;*/
+	k = 5.0f; //TODO - do we make this dependent on t?
+	t = 50; 
+	//Creating 0 cs gradient to start
+	csGrad = glm::vec3(0.0); 
 }
 
 Particle::~Particle(void)
@@ -41,12 +46,12 @@ void Particle::setVelocity(glm::vec3 vel)
 
 void Particle::setViscosity(float v)
 {
-	viscosity = v; 
+	mu = v; 
 }
 
 float Particle::getViscosity()
 {
-	return viscosity; 
+	return mu; 
 }
 
 std::vector<Particle*> Particle::getNeighbors()
@@ -79,7 +84,7 @@ float Particle::getMass()
 	return mass; 
 }
 
-void Particle::setMass(int m){
+void Particle::setMass(float m){
 	mass = m; 
 }
 
@@ -121,4 +126,70 @@ void Particle::setPressure(float p)
 float Particle::getPressure()
 {
 	return pressure; 
+}
+
+void  Particle::setTemp(float temp)
+{
+	t = temp; 
+}
+float  Particle::getTemp()
+{
+	return t; 
+}
+
+void  Particle::setCi(float _ci)
+{
+	ci = _ci; 
+}
+float  Particle::getCi()
+{
+	return ci; 
+}
+
+void  Particle::setCp(float _cp)
+{
+	cp = _cp; 
+}
+float  Particle::getCp()
+{
+	return cp;
+}
+
+void  Particle::setCs(float _cs)
+{
+	cs = _cs; 
+}
+float  Particle::getCs()
+{
+	return cs;
+}
+
+void  Particle::setK(float _k)
+{
+	k = _k;
+}
+
+float  Particle::getK()
+{
+	return k;
+}
+
+void Particle::setColor (glm::vec3 c)
+{
+	color = c; 
+}
+
+glm::vec3 Particle::getColor()
+{
+	return color;
+}
+
+void Particle::setCsGrad(glm::vec3 cs)
+{
+	csGrad = cs; 
+}
+
+glm::vec3 Particle::getCsGrad()
+{
+	return csGrad; 
 }

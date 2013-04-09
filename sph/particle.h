@@ -18,7 +18,7 @@ public:
 	~Particle(void);
 
 	float getMass();
-	void setMass(int m); 
+	void setMass(float m); 
 
 	glm::vec3 getForce(); 
 	void setForce(glm::vec3 f); 
@@ -41,6 +41,27 @@ public:
 	void setViscosity(float v);
 	float getViscosity(); 
 
+	void setTemp(float temp);
+	float getTemp();
+
+	void setCi(float _ci); 
+	float getCi();
+
+	void setCp(float _cp); 
+	float getCp();
+
+    void setCs(float _cs); 
+	float getCs();
+
+	void setK(float _k);
+	float getK(); 
+
+	void setColor (glm::vec3 c);
+	glm::vec3 getColor(); 
+
+	void setCsGrad(glm::vec3 cs);
+	glm::vec3 getCsGrad(); 
+
 	std::vector<Particle*> getNeighbors();
 	void setNeighbors(std::vector<Particle*> n); 
 	void addNeighbor(Particle *p); 
@@ -60,8 +81,17 @@ private:
 
 	glm::vec3 force; 
 	glm::vec3 color;
-	float viscosity; 
-	float temp; 
+
 	std::vector<Particle*> neighbors; 
+
+	//Variables for fluid-fluid interaction
+	float mu; 
+	float t; 
+	float ci;
+	float cp;
+	float cs;
+	glm::vec3 csGrad; 
+	float k; 
+
 };
 

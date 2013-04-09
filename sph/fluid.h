@@ -26,16 +26,26 @@ public:
 	//Initialize fluid from some point
 	void addFluid(float dt);
 
+	//Test functions to draw two different liquids 
+	void addMultiFluid(); //Pours fluids of two densities together 
+	void addLavaLamp();  //Recreates the lavalamp example from http://www.matthiasmueller.info/publications/sca05.pdf
+
 	//Simulation functions
 	void Update(float dt, glm::vec3& externalForces);
 	void findNeighbors();
 	void computeDensity(float dt);
 	float field( vec3 pos );
+	//Functions for multiple fluid & bubble simulation
+	void computeDiffusion(float dt); 
+	glm::vec3 computeArtificialBuoyancy(int i); 
+	void manageAirBubbles();
+	
 
 	//Forces 
 	glm::vec3 computePressure(float dt, int i);
 	glm::vec3 computeViscosity(float dt, int i); 
 	glm::vec3 computeSurfaceTension(float dt, int i); 
+	void computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, glm::vec3 &surfaceForce);
 	void computeForces(float dt, glm::vec3 externalForces);
 
 	//Position & velocity integration
@@ -81,5 +91,6 @@ protected:
 	
 	std::vector<Particle *> theParticles; 
 	std::vector<glm::vec3> accel0; 
+	std::vector<vec3> vel0; 
 };
 

@@ -189,7 +189,7 @@ void display_cb() {
 	if( play || singleStep )
 	{
 		singleStep = false;
-		theFluid.Update(0.004, glm::vec3(0, -9.8, 0)); 
+		theFluid.Update(0.004, glm::vec3(0.0, -9.8, 0.0)); 
 		/*theFluid.Update(0.0008, glm::vec3(0, -9.8, 0)); 
 		theFluid.Update(0.0008, glm::vec3(0, -9.8, 0)); 
 		theFluid.Update(0.0008, glm::vec3(0, -9.8, 0)); 

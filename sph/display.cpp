@@ -334,7 +334,13 @@ void Display::draw()
 		World::Shape * particle = new World::Cube();
 		particle->translate(particles.at(i)->getPosition()); 
 		particle->scale( vec3( 0.07 ) );
-		particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
+		//particle->setColor(particles.at(i)->getColor().x, particles.at(i)->getColor().y, particles.at(i)->getColor().z);
+		float tempTest1 = 0.1; 
+		float tempTest2 = 0.1; 
+		if (particles.at(i)->getTemp() < 10.) tempTest1 = 1; 
+		else if (particles.at(i)->getTemp() > 10.f) tempTest2 = 1; 	
+		particle->setColor(0.0, tempTest1, tempTest2); 
+		//particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 		delete particle;
 	}
