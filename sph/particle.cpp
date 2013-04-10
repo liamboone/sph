@@ -12,12 +12,15 @@ Particle::Particle(float den, float m, glm::vec3 pos, glm::vec3 vel)
 	mass = m; 
 	position.x = pos.x; position.y = pos.y; position.z = pos.z; 
 	velocity.x = vel.x; velocity.y = vel.y; velocity.z = vel.z; 
-	mu = 15.f; 
+	mu = 50.f; 
 	/*const float sigma = 5.f;*/
-	k = 5.0f; //TODO - do we make this dependent on t?
-	t = 50; 
+	k = 20.0f; //TODO - do we make this dependent on t?
+	t = 10; 
+
 	//Creating 0 cs gradient to start
 	csGrad = glm::vec3(0.0); 
+	cs = 1; 
+	cp = 1; 
 }
 
 Particle::~Particle(void)

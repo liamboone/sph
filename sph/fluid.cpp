@@ -2,15 +2,23 @@
 #include <iostream>
 
 //Globals
-const float radius = 0.1f;
-const float h = 1.7*radius;
+const float radius = 0.045f;
+const float h = 3*radius;
 const float k = 5; //TODO - make this function dependant on the temp
 const float PI = 3.14159265; 
 const float mu = 15.f;
-const float sigma = 5.f;
-const float sigmaI = 2.f;
+const float sigma = 0.6f;
+const float sigmaI = 0.6f;
 const float restDensity = 1000.0f;
 const float mass = restDensity*4.0f/3.0f*PI*radius*radius*radius;
+
+/*
+In the results section, they say: 
+support radius = 0.045 m
+viscosity constant = 50 Ns / m^2
+k = 20 Nm / kg
+omegai & omegas = 0.6
+*/
 
 //***************************************
 const bool useMultiFluidCalcs = true; 
@@ -609,7 +617,8 @@ void Fluid::computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, 
 	{
 		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
 		float mass = neighbors.at(j)->getMass(); 
-		float denInv = 1.0f / (neighbors.at(j)->getDensity() + 1e-15f); 
+		//Cs should be 0 for air particles & 1 for liquids
+		float denInv = theParticles.at(i)->getCs() / (neighbors.at(j)->getDensity() + 1e-15f); 
 		glm::vec3 poly6Grad = wPoly6Grad(r, h);
 		float poly6Lap = wPoly6Lap(r, h); 
 
@@ -623,12 +632,16 @@ void Fluid::computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, 
 
 	}
 
+	//The normal is the gradient of cs.  Store it to use in bubble creation
+	theParticles.at(i)->setCsGrad(n); 
+
 	k = -k / (glm::length(n) + 1e-15f); 
 	n =  n / (glm::length(n) + 1e-15f);
 	surfaceForce = sigma * k * n; 
 
+
 	//TODO - should we be normalizing k? 
-	ni = ni / (glm::length(n) + 1e-15f); 
+	ni = ni / (glm::length(ni) + 1e-15f); 
 	interfaceForce = -sigmaI * ki * ni; 
 }
 
@@ -792,10 +805,12 @@ void  Fluid::manageAirBubbles()
 	{
 		glm::vec3 csGrad = theParticles.at(i)->getCsGrad(); 
 		//TODO - these checks should be cp, but not sure how to calc!!!!
-		if (glm::length(csGrad) > 100 && csGrad.y > 0)
+		//if (glm::length(csGrad) > 10)
+		//	cout<<"FOUND GRAD: "<<glm::length(csGrad)<<endl;
+		if (glm::length(csGrad) > 500 && csGrad.y > 0)
 		{
 			vec3 pos =  theParticles.at(i)->getPosition() -0.0003f * csGrad; 
-			Particle * p = new Particle(100, mass, pos, glm::vec3(0));
+			Particle * p = new Particle(100, mass, pos, theParticles.at(i)->getVelocity() );
 			p->setCi(0);
 			p->setCs(0); 
 			theParticles.push_back(p);
@@ -810,8 +825,16 @@ void  Fluid::manageAirBubbles()
 
 		//Delete any air particles that don't meet min conditions
 		//TODO - the second check should be cp!!! 
-		if ((length(csGrad) < 0.0001 && csGrad.y < 0) || theParticles.at(i)->getDensity() < 5) {
-			int k = 0; 
+		if (theParticles.at(i)->getCi() == 0 && theParticles.at(i)->getCs() == 0) {
+			if ((length(csGrad) < 0.0001 && csGrad.y < 0) || theParticles.at(i)->getDensity() < 5) {
+				int k = 0; 
+				theParticles.erase(theParticles.begin() + i); 
+				//If we are using leapfrog, also delete the corresponding elements
+				if (accel0.size() >= i) {
+					accel0.erase(accel0.begin() + i); 
+					vel0.erase(vel0.begin() + i); 
+				}
+			}
 		}
 	}
 
