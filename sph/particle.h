@@ -62,6 +62,9 @@ public:
 	void setCsGrad(glm::vec3 cs);
 	glm::vec3 getCsGrad(); 
 
+	void setCpGrad(glm::vec3 cp);
+	glm::vec3 getCpGrad(); 
+
 	std::vector<Particle*> getNeighbors();
 	void setNeighbors(std::vector<Particle*> n); 
 	void addNeighbor(Particle *p); 
@@ -91,6 +94,7 @@ private:
 	float cp;
 	float cs;
 	glm::vec3 csGrad; 
+	glm::vec3 cpGrad; 
 	float k; 
 
 };

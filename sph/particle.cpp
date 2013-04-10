@@ -19,8 +19,10 @@ Particle::Particle(float den, float m, glm::vec3 pos, glm::vec3 vel)
 
 	//Creating 0 cs gradient to start
 	csGrad = glm::vec3(0.0); 
+	cpGrad = glm::vec3(0.0); 
 	cs = 1; 
-	cp = 1; 
+	cp = 1;
+	ci = 1; 
 }
 
 Particle::~Particle(void)
@@ -195,4 +197,14 @@ void Particle::setCsGrad(glm::vec3 cs)
 glm::vec3 Particle::getCsGrad()
 {
 	return csGrad; 
+}
+
+void Particle::setCpGrad(glm::vec3 cp)
+{
+	cpGrad = cp; 
+}
+
+glm::vec3 Particle::getCpGrad()
+{
+	return cpGrad; 
 }
