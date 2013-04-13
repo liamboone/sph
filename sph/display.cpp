@@ -292,13 +292,13 @@ void Display::draw()
 
 	world->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 	//TODO: draw particles
+	World::Shape * particle = new World::Cube();
 	for (int i = 0; i < particles.size(); i++)
 	{
-		World::Shape * particle = new World::Cube();
+		particle->clearMat();
 		particle->translate(particles.at(i)->getPosition()); 
 		particle->scale( vec3( 0.07 ) );
 		particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
-		delete particle;
 	}
 	//END render from light
 
@@ -331,7 +331,7 @@ void Display::draw()
 
 	for (int i = 0; i < particles.size(); i++)
 	{
-		World::Shape * particle = new World::Cube();
+		particle->clearMat();
 		particle->translate(particles.at(i)->getPosition()); 
 		particle->scale( vec3( 0.07 ) );
 		vec3 red( 1,0,0 );
@@ -347,8 +347,9 @@ void Display::draw()
 		//particle->setColor(0.0, tempTest1, tempTest2); 
 		//particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
-		delete particle;
-	}
+	}	
+	delete particle;
+	
 	//END render from camera
 	glBindTexture(GL_TEXTURE_2D,0);
 }

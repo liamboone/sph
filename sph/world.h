@@ -36,6 +36,7 @@ public:
 		void translate( vec3 t ) { M = glm::translate( M, t ); }
 		void scale( vec3 s ) { M = glm::scale( M, s ); }
 		void rotate( vec3 axis, float theta ) { M = glm::rotate( M, theta, axis ); }
+		void clearMat() { M = mat4(1.0); }
 		
 		virtual void setColor( vec3 rgb ) { color = rgb; }
 		
