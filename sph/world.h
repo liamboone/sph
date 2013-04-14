@@ -59,15 +59,17 @@ public:
     class Sphere : public Shape
     {
     public:
-        Sphere() : Shape(SPHERE), r(1.0) { initMesh(); }
-        double r;
+        Sphere() : Shape(SPHERE) { initMesh(); }
+		void setColor( vec3 rgb );
+
+	protected:
+		void initMesh();
     };
 
     class Cube : public Shape
     {
     public:
-        Cube() : Shape(CUBE), hx(0.5), hy(0.5), hz(0.5) { initMesh(); }
-        double hx, hy, hz;
+        Cube() : Shape(CUBE) { initMesh(); }
 		void setColor( vec3 rgb );
 
 	protected:

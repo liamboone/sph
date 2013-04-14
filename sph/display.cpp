@@ -105,7 +105,7 @@ void Display::init()
 	colorLocation = 2;
 	
 	//Everybody does this
-	glClearColor(0.6, 0.8, 1.0, 1);
+	glClearColor(0.6f, 0.8f, 1.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glClearDepth(1.0);
 	glDepthFunc(GL_LEQUAL);
@@ -149,7 +149,7 @@ void Display::init()
 	glUniform3f(u_camPositionLocation, cpos.x, cpos.y, cpos.z );
 
 	glUseProgram(raymarchShaderProgram);
-	glUniform2f(u_resolutionLocation, camera->getWidth(), camera->getHeight() );
+	glUniform2i(u_resolutionLocation, camera->getWidth(), camera->getHeight() );
 	glUniform3f(u_rayCamPositionLocation, cpos.x, cpos.y, cpos.z );
 	
 	// The framebuffer
@@ -293,7 +293,7 @@ void Display::draw()
 	world->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 	//TODO: draw particles
 	World::Shape * particle = new World::Cube();
-	for (int i = 0; i < particles.size(); i++)
+	for (unsigned int i = 0; i < particles.size(); i++)
 	{
 		particle->clearMat();
 		particle->translate(particles.at(i)->getPosition()); 
@@ -329,7 +329,7 @@ void Display::draw()
 	//TODO: draw particles
 	Box* b1 = theFluid->container( vec3(0,0,0) );
 
-	for (int i = 0; i < particles.size(); i++)
+	for (unsigned int i = 0; i < particles.size(); i++)
 	{
 		particle->clearMat();
 		particle->translate(particles.at(i)->getPosition()); 
@@ -338,14 +338,14 @@ void Display::draw()
 		vec3 blue( 0,0,1 );
 		float alpha = ( particles.at( i )->getTemp() - 5 ) / 10;
 
-		particle->setColor(alpha*red + (1-alpha)*blue);
+		//particle->setColor(alpha*red + (1-alpha)*blue);
 		//particle->setColor(particles.at(i)->getColor());
 		//float tempTest1 = 0.1; 
 		//float tempTest2 = 0.1; 
 		//if (particles.at(i)->getTemp() < 10.) tempTest1 = 1; 
 		//else if (particles.at(i)->getTemp() > 10.f) tempTest2 = 1; 	
 		//particle->setColor(0.0, tempTest1, tempTest2); 
-		//particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
+		particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
 		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	}	
 	delete particle;
@@ -364,7 +364,7 @@ void Display::updateCamera()
 	glUniform3f(u_camPositionLocation, cpos.x, cpos.y, cpos.z );
 	
 	glUseProgram(raymarchShaderProgram);
-	glUniform2f(u_resolutionLocation, camera->getWidth(), camera->getHeight() );
+	glUniform2i(u_resolutionLocation, camera->getWidth(), camera->getHeight() );
 	glUniform3f(u_rayCamPositionLocation, cpos.x, cpos.y, cpos.z );
 }
 

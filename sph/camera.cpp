@@ -8,8 +8,8 @@ void Camera::init( float _fovy, vec3 _pos, vec3 _target, vec3 _up, float _znear,
 	target = _target;
 	up = _up;
 
-	zNear = 0.1;
-	zFar = 30.0;
+	zNear = 0.1f;
+	zFar = 30.0f;
 
 	width = 640;
 	height = 480;

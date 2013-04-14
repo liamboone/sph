@@ -1,19 +1,22 @@
 #include "container.h"
 
-Container::Container( int x, int y, int z, vec3 lower, vec3 upper )
+Container::Container( float h, vec3 lower, vec3 upper )
 {
 	lBound = lower;
 	uBound = upper;
-	width = x;
-	height = y;
-	depth = z;
+
+	span = uBound-lBound;
+
+	width = (int)(span.x/h);
+	height = (int)(span.y/h);
+	depth = (int)(span.z/h);
 }
 
 Container::~Container() { }
 
 Box * Container::operator()( vec3 p )
 {
-	vec3 P = (p - lBound)/(uBound - lBound);
+	vec3 P = (p - lBound) / span;
 
 	float x = P.x;
 	float y = P.y;
@@ -21,9 +24,9 @@ Box * Container::operator()( vec3 p )
 
 	int i,j,k;
 	
-	i = floor( width * x );
-	j = floor( height * y );
-	k = floor( depth * z );
+	i = (int) floor( width * x );
+	j = (int) floor( height * y );
+	k = (int) floor( depth * z );
 
 	return &grid[i + j*width + k*width*height];
 }

@@ -68,7 +68,7 @@ void World::Mesh::initMesh( )
 
 void World::draw( GLuint ploc, GLuint cloc, GLuint nloc, GLint Mloc )
 {
-	for( int i = 0; i < m_shapes.size(); i ++ )
+	for( unsigned int i = 0; i < m_shapes.size(); i ++ )
 	{
 		m_shapes.at( i )->draw( ploc, cloc, nloc, Mloc );
 	}
@@ -96,6 +96,24 @@ void World::Cube::setColor( vec3 rgb )
 
 	glBindBuffer(GL_ARRAY_BUFFER, cbo);
 	glBufferData(GL_ARRAY_BUFFER, 72 * sizeof(float), colors, GL_STATIC_DRAW);
+
+	delete[] colors;
+}
+
+void World::Sphere::setColor( vec3 rgb )
+{
+	color = rgb;
+	float* colors = new float[675];
+
+	for( int i = 0; i < 675; i+=3 )
+	{
+		colors[i  ] = color.r;
+		colors[i+1] = color.g;
+		colors[i+2] = color.b;
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, cbo);
+	glBufferData(GL_ARRAY_BUFFER, 675 * sizeof(float), colors, GL_STATIC_DRAW);
 
 	delete[] colors;
 }
@@ -277,6 +295,64 @@ void World::Cube::initMesh()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	delete[] colors;
+	delete[] indices;
+	delete[] normals;
+	delete[] vertices;
+}
+
+void World::Sphere::initMesh( )
+{
+	//Create the VBOs and IBO we'll be using to render images in OpenGL
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &cbo);
+	glGenBuffers(1, &nbo);
+	glGenBuffers(1, &ibo);
+
+	//set the number of indicies
+	num = 1350;
+
+	float* vertices = new float[15*15*4];
+	float* normals = new float[15*15*4];
+	unsigned short* indices = new unsigned short[num];
+
+	int i = 0;
+	int idx = 0;
+	for( float theta = 0; theta < 15; theta += 1 )
+	{
+		for( float azimuth = 0; azimuth < 15; azimuth += 1 )
+		{
+			float x = sin( (azimuth)/14.0f * 3.14159f )*cos(theta/7.5f * 3.14159f);
+			float z = sin( (azimuth)/14.0f * 3.14159f )*sin(theta/7.5f * 3.14159f);
+			float y = cos( (azimuth)/14.0f * 3.14159f );
+			vertices[i] = x/2; vertices[i+1] = y/2; vertices[i+2] = z/2; vertices[i+3] = 1;
+			normals[i] = x; normals[i+1] = y; normals[i+2] = z; normals[i+3] = 0;
+			i+=4;
+			if( azimuth < 14 )
+			{
+				indices[idx  ] = (int)theta * 15 + (int)azimuth;
+				indices[idx+1] = (int)( theta+1 )%15 * 15 + (int)azimuth + 1;
+				indices[idx+2] = (int)theta * 15 + (int)azimuth + 1;
+				
+				indices[idx+3] = (int)theta * 15 + (int)azimuth;
+				indices[idx+4] = (int)( theta+1 )%15 * 15 + (int)azimuth;
+				indices[idx+5] = (int)( theta+1 )%15 * 15 + (int)azimuth + 1;
+				idx += 6;
+			}
+		}
+	}
+	
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, 900 * sizeof(float), vertices, GL_STATIC_DRAW); 
+
+	glBindBuffer(GL_ARRAY_BUFFER, nbo);
+	glBufferData(GL_ARRAY_BUFFER, 900 * sizeof(float), normals, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 1350 * sizeof(unsigned short), indices, GL_STATIC_DRAW);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
 	delete[] indices;
 	delete[] normals;
 	delete[] vertices;

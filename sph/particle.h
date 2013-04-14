@@ -5,7 +5,7 @@
 #include "memleak.h"
 
 // glm
-#include "..\glm\glm.hpp";
+#include "..\glm\glm.hpp"
 #include "..\glm/gtc/matrix_transform.hpp"
 //using namespace glm;
 
@@ -17,53 +17,39 @@ public:
 	Particle(float den, float mass, glm::vec3 position, glm::vec3 velocity); 
 	~Particle(void);
 
-	float getMass();
-	void setMass(float m); 
+	void setMass(float m)			{ mass = m;			} 
+	void setDensity(float d)		{ density = d;		}
+	void setRestDensity(float d)	{ restDensity = d;	}
+	void setPressure(float p)		{ pressure = p;		}
+	void setViscosity(float v)		{ mu = v;			}
+	void setTemp(float temp)		{ t = temp;			}
+	void setCi(float _ci)			{ ci = _ci;			}
+	void setCp(float _cp)			{ cp = _cp;			}
+	void setCs(float _cs)			{ cs = _cs;			}
+	void setK(float _k)				{ k = _k;			}
+	void setColor (glm::vec3 c)		{ color = c;		}
+	void setCsGrad(glm::vec3 cs)	{ csGrad = cs;		}
+	void setCpGrad(glm::vec3 cp)	{ cpGrad = cp;		}
+	void setForce(glm::vec3 f)		{ force = f;		}
+	void setPostion(glm::vec3 pos)	{ position = pos;	}
+	void setVelocity(glm::vec3 vel)	{ velocity = vel;	}
 
-	glm::vec3 getForce(); 
-	void setForce(glm::vec3 f); 
-	
-	glm::vec3 getPosition();
-	void setPostion(glm::vec3 pos);
-	
-	glm::vec3 getVelocity();
-	void setVelocity(glm::vec3 vel); 
-	
-	void setDensity(float d);
-	float getDensity();
-	
-	void setRestDensity(float d);
-	float getRestDensity();
-	
-	void setPressure(float p);
-	float getPressure(); 
-
-	void setViscosity(float v);
-	float getViscosity(); 
-
-	void setTemp(float temp);
-	float getTemp();
-
-	void setCi(float _ci); 
-	float getCi();
-
-	void setCp(float _cp); 
-	float getCp();
-
-    void setCs(float _cs); 
-	float getCs();
-
-	void setK(float _k);
-	float getK(); 
-
-	void setColor (glm::vec3 c);
-	glm::vec3 getColor(); 
-
-	void setCsGrad(glm::vec3 cs);
-	glm::vec3 getCsGrad(); 
-
-	void setCpGrad(glm::vec3 cp);
-	glm::vec3 getCpGrad(); 
+	float getMass()			{ return mass;			}
+	float getDensity()		{ return density;		}
+	float getRestDensity()	{ return restDensity;	}
+	float getPressure()		{ return pressure;		}
+	float getViscosity()	{ return mu;			}
+	float getTemp()			{ return t;				}
+	float getCi()			{ return ci;			}
+	float getCp()			{ return cp;			}
+	float getCs()			{ return cs;			}
+	float getK()			{ return k;				}
+	glm::vec3 getColor()	{ return color;			}
+	glm::vec3 getCsGrad()	{ return csGrad;		}
+	glm::vec3 getCpGrad()	{ return cpGrad;		}
+	glm::vec3 getForce()	{ return force;			}
+	glm::vec3 getPosition()	{ return position;		}
+	glm::vec3 getVelocity()	{ return velocity;		}
 
 	std::vector<Particle*> getNeighbors();
 	void setNeighbors(std::vector<Particle*> n); 
@@ -95,7 +81,6 @@ private:
 	float cs;
 	glm::vec3 csGrad; 
 	glm::vec3 cpGrad; 
-	float k; 
-
+	float k;
 };
 

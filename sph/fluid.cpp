@@ -4,8 +4,8 @@
 //Globals
 const float radius = 0.0451f;
 const float h = 3*radius;
-const float k = 20; //TODO - make this function dependant on the temp
-const float PI = 3.14159265; 
+const float k = 20.0f; //TODO - make this function dependant on the temp
+const float PI = 3.14159265f; 
 const float mu = 50.f;
 const float sigma = 0.6f;
 const float sigmaI = 2.f;
@@ -28,7 +28,7 @@ const bool loadFromMesh = false;
 const vec3 containerMin(-1.0, 0, -1.0);
 const vec3 containerMax(1.0, 3, 1.0); 
 
-Fluid::Fluid(void) : container( 6.0/h, 6.0/h, 6.0/h, containerMin, containerMax)
+Fluid::Fluid(void) : container( h, containerMin, containerMax)
 {
 	frame = 0;
 	/*srand (time(NULL));*/
@@ -148,7 +148,7 @@ bool Fluid::insideOutside(vec3 p)
 	{
 		int numIntersects = 0; 
 		vector<vec4> points = *theMesh->getPoints(); 
-		for (int i = 0; i < (*theMesh->getFaces()).size(); i++)
+		for (unsigned int i = 0; i < (*theMesh->getFaces()).size(); i++)
 		//Then check if its actually inside the mesh
 		{
 			vector<int> face = (*theMesh->getFaces()).at(i); 
@@ -174,18 +174,18 @@ bool Fluid::insideOutside(vec3 p)
 void Fluid::createParticlesFromMesh()
 {
 	//Run through the grid & add particles if we are inside the mesh
-	for (float x = containerMin.x; x < containerMax.x; x+= 0.1)
+	for( float x = containerMin.x; x < containerMax.x; x+= 0.1f )
 	{
-		for (float y = containerMin.y; y < containerMax.y; y+=0.1 )
+		for( float y = containerMin.y; y < containerMax.y; y+=0.1f )
 		{
-			for (float z = containerMin.z; z < containerMax.z; z+=0.1)
+			for( float z = containerMin.z; z < containerMax.z; z+=0.1f )
 			{
 				vec3 pos(x, y, z); 
 				if (insideOutside(pos) == true) {
 					//Make a little random
-					float rx = 0.001*((double) rand() / (RAND_MAX)); 
-					float ry = 0.001*((double) rand() / (RAND_MAX)); 
-					float rz = 0.001*((double) rand() / (RAND_MAX)); 
+					float rx = 0.001f*((float) rand() / (RAND_MAX)); 
+					float ry = 0.001f*((float) rand() / (RAND_MAX)); 
+					float rz = 0.001f*((float) rand() / (RAND_MAX)); 
 					pos.x += rx;
 					pos.y += ry;
 					pos.z += rz;
@@ -207,17 +207,18 @@ void Fluid::createParticlesFromMesh()
 //Add two different types of fluids
 void Fluid::addMultiFluid()
 {
-	if (frame == 0) {
+	if( frame == 0 )
+	{
 		//Add more dense fluid in cube
-		for (float z = -0.4; z < 0.4; z+=0.1)
+		for( float z = -0.4; z < 0.4; z+=0.1f )
 		{
-			for (float y = 0; y < 1.0; y += 0.1 )
+			for( float y = 0; y < 1.0; y += 0.1f )
 			{
-				for (float x = -0.4; x < 0.4; x+=0.1)
+				for( float x = -0.4; x < 0.4; x+=0.1f )
 				{
-					float rx = 0.01*((double) rand() / (RAND_MAX)); 
-					float ry = 0.01*((double) rand() / (RAND_MAX)); 
-					float rz = 0.01*((double) rand() / (RAND_MAX)); 
+					float rx = 0.01f*((float) rand() / (RAND_MAX)); 
+					float ry = 0.01f*((float) rand() / (RAND_MAX)); 
+					float rz = 0.01f*((float) rand() / (RAND_MAX)); 
 
 					vec3 pos(x+rx, y+ry, z+rz);
 					//Density, mass, position, velocity (particle inputs)
@@ -360,7 +361,7 @@ void Fluid::addFluid(float dt)
 			float ry = 0.01*((double) rand() / (RAND_MAX)); 
 			float rz = 0.01*((double) rand() / (RAND_MAX)); 
 			
-			vec3 pos(rx+2, y+ry+2.5, z+rz);
+			vec3 pos(rx+1, y+ry+1, z+rz);
 			//Density, mass, position, velocity (particle inputs)
 			Particle * p = new Particle(restDensity, mass, pos, glm::vec3(-3, 0, 0.0));
 			theParticles.push_back(p);
@@ -410,10 +411,10 @@ void Fluid::Update(float dt, glm::vec3& externalForces)
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 8000 && frame % 4 == 0) {
-		//addFluid(dt);
+		addFluid(dt);
 		//addMultiFluid();
 		//addLavaLamp(); 
-		if( frame == 0 )
+		if( frame == -1 )
 		{
 			for( float y = 0; y < 3; y += 0.1 )
 			{
