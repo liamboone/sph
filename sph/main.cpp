@@ -34,6 +34,7 @@ bool play = false;
 bool singleStep = false;
 int screenWidth = 640;
 int screenHeight = 480;
+int displayFlags = 3;
 
 void resize_cb(int, int);
 void display_cb(void);
@@ -57,6 +58,7 @@ int main(int argc, char** argv)
 
 	display.init();
 	display.setFluids(&theFluid); 
+	display.setFlags( displayFlags );
 
 	//Setup Callbacks
 	glutDisplayFunc(display_cb);
@@ -132,9 +134,25 @@ void keypress_cb(unsigned char key, int x, int y) {
 	case 'd':
 		displayOn = !displayOn;
 		break;
+	case 'v':
+		displayFlags ^= DFLAG_VEL;
+		display.setFlags( displayFlags );
+		break;
+	case 't':
+		displayFlags ^= DFLAG_TEMP;
+		display.setFlags( displayFlags );
+		break;
 	case 'r':
 		isRecording = !isRecording; 
 		if (isRecording) theFrameNum = 0;
+		break;
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+		int ord = key - '1';
+		displayFlags ^= 1 << ord;
+		display.setFlags( displayFlags );
 		break;
 	}
 	glutPostRedisplay();
@@ -194,10 +212,6 @@ void display_cb() {
 	if( displayOn )
 	{
 		display.draw();
-	}
-	else
-	{
-		display.march();
 	}
 	if (isRecording) grabScreen(); 
 	glutSwapBuffers();

@@ -74,6 +74,9 @@ void Display::printShaderInfoLog(int shader)
 
 Display::Display() 
 {
+	colorMap[1] = vec3( 1.0f, 0.5f, 0.0f );
+	colorMap[2] = vec3( 0.5f, 0.5f, 1.0f );
+	colorMap[4] = vec3( 0.5f, 1.0f, 0.3f );
 }
 
 Display::~Display()
@@ -290,15 +293,20 @@ void Display::draw()
 	
 	glUniformMatrix4fv(u_shadowProjMatrixLocation, 1, GL_FALSE, &cmat[0][0]);
 
-	world->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+	if( pos.y > 0 ) 
+		world->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
 	//TODO: draw particles
 	World::Shape * particle = new World::Cube();
 	for (unsigned int i = 0; i < particles.size(); i++)
 	{
-		particle->clearMat();
-		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale( vec3( 0.07 ) );
-		particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+		int pidx = particles.at( i )->getIndex();
+		if( flags & pidx )
+		{
+			particle->clearMat();
+			particle->translate(particles.at(i)->getPosition()); 
+			particle->scale( vec3( 0.04 ) );
+			particle->draw( shadowPositionLocation, colorLocation, normalLocation, u_shadowModelMatrixLocation );
+		}
 	}
 	//END render from light
 
@@ -325,28 +333,36 @@ void Display::draw()
 	camera->setPos( pos );
 	glViewport(0,0,w,h);
 	glCullFace( GL_BACK );
-	world->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
+	if( pos.y > 0 ) 
+		world->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
 	//TODO: draw particles
-	Box* b1 = theFluid->container( vec3(0,0,0) );
+	vec3 red( 1,0,0 );
+	vec3 blue( 0,0,1 );
 
 	for (unsigned int i = 0; i < particles.size(); i++)
 	{
-		particle->clearMat();
-		particle->translate(particles.at(i)->getPosition()); 
-		particle->scale( vec3( 0.07 ) );
-		vec3 red( 1,0,0 );
-		vec3 blue( 0,0,1 );
-		float alpha = ( particles.at( i )->getTemp() - 5 ) / 10;
+		int pidx = particles.at( i )->getIndex();
+		if( flags & pidx )
+		{
+			particle->clearMat();
+			particle->translate(particles.at(i)->getPosition()); 
+			particle->scale( vec3( 0.04 ) );
 
-		//particle->setColor(alpha*red + (1-alpha)*blue);
-		//particle->setColor(particles.at(i)->getColor());
-		//float tempTest1 = 0.1; 
-		//float tempTest2 = 0.1; 
-		//if (particles.at(i)->getTemp() < 10.) tempTest1 = 1; 
-		//else if (particles.at(i)->getTemp() > 10.f) tempTest2 = 1; 	
-		//particle->setColor(0.0, tempTest1, tempTest2); 
-		particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
-		particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
+			if( flags & DFLAG_VEL )
+			{
+				particle->setColor( 0.1f+glm::clamp( particles.at(i)->getVelocity()*particles.at(i)->getVelocity()/5.0f, vec3(0.0), vec3(1.0) ) );
+			}
+			else if( flags & DFLAG_TEMP )
+			{
+				float alpha = ( particles.at( i )->getTemp() - 5 ) / 10;
+				particle->setColor(alpha*red + (1-alpha)*blue);
+			}
+			else
+			{
+				particle->setColor( colorMap[pidx] );
+			}
+			particle->draw( positionLocation, colorLocation, normalLocation, u_modelMatrixLocation );
+		}
 	}	
 	delete particle;
 	
@@ -375,7 +391,6 @@ void Display::setFluids(Fluid *fluid)
 
 void Display::march()
 {
-	return;
 	glUseProgram( raymarchShaderProgram );
 	glUniform1i( u_distanceMapLocation, 4 );
 	glActiveTexture(GL_TEXTURE4);

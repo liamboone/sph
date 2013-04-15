@@ -27,7 +27,7 @@ public:
 	void setCp(float _cp)			{ cp = _cp;			}
 	void setCs(float _cs)			{ cs = _cs;			}
 	void setK(float _k)				{ k = _k;			}
-	void setColor (glm::vec3 c)		{ color = c;		}
+	void setIndex(int idx)			{ index = idx;		}
 	void setCsGrad(glm::vec3 cs)	{ csGrad = cs;		}
 	void setCpGrad(glm::vec3 cp)	{ cpGrad = cp;		}
 	void setForce(glm::vec3 f)		{ force = f;		}
@@ -44,7 +44,7 @@ public:
 	float getCp()			{ return cp;			}
 	float getCs()			{ return cs;			}
 	float getK()			{ return k;				}
-	glm::vec3 getColor()	{ return color;			}
+	int getIndex()			{ return index;			}
 	glm::vec3 getCsGrad()	{ return csGrad;		}
 	glm::vec3 getCpGrad()	{ return cpGrad;		}
 	glm::vec3 getForce()	{ return force;			}
@@ -69,7 +69,7 @@ private:
 	glm::vec3 velocity;
 
 	glm::vec3 force; 
-	glm::vec3 color;
+	int index;
 
 	std::vector<Particle*> neighbors; 
 

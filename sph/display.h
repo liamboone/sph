@@ -4,6 +4,7 @@
 // c++ libraries
 #include <fstream>
 #include <iostream>
+#include <map>
 
 #include "memleak.h"
 
@@ -17,6 +18,9 @@
 #include "camera.h"
 #include "world.h"
 #include "fluid.h"
+
+#define DFLAG_VEL 0x8000
+#define DFLAG_TEMP 0x4000
 
 using namespace glm;
 
@@ -45,8 +49,13 @@ public:
 	void updateViewport( int w, int h ) { camera->setViewport( w, h ); updateCamera(); }
 	void zoomCamera( int dz ) { camera->zoom( dz ); updateCamera(); }
 	void orbitCamera( int dx, int dy ) { camera->orbit( dx, dy ); ; updateCamera(); }
+	void setFlags( int f ) { flags = f; }
 
 private:
+	std::map<int, vec3> colorMap;
+
+	int flags;
+
 	void initShaders();
 	void loadShader( const char* vertFile, const char* fragFile, const char* geomFile, Shader & shader );
 
