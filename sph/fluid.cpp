@@ -194,6 +194,7 @@ void Fluid::createParticlesFromMesh()
 					pos.y += ry;
 					pos.z += rz;
 					Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0.0, 0.0, 0.0));
+					p->setIndex(1); 
 					theParticles.push_back(p);
 					Box * box = container( pos );
 					if( box->frame < frame )
@@ -301,7 +302,7 @@ void Fluid::addLavaLamp()
 					float rz = 0.01f*(float)rand() / RAND_MAX; 
 					vec3 pos(x+rx, y+ry, z+rz);
 					//TODO - mass freaks out when its 0.012 like they give in the paper!!! :(
-					Particle * p = new Particle(restDensity+200, mass, pos, glm::vec3(0));
+					Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0));
 					theParticles.push_back(p);
 					p->setIndex(2);
 					p->setTemp(5.f); 
@@ -328,7 +329,7 @@ void Fluid::addLavaLamp()
 					vec3 pos(x+rx, y+ry, z+rz);
 					//was 0.006
 					//TODO - figure out if we just wanna use the defaults or if we want to change other params
-					Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0));
+					Particle * p = new Particle(restDensity+200, mass, pos, glm::vec3(0));
 					theParticles.push_back(p);
 					p->setIndex(1);
 					p->setTemp(15.f); 
@@ -364,7 +365,6 @@ void Fluid::addLavaLamp()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	//*
 	for (float z = -0.2; z < 0.2; z+=0.1)
     {
 		for (float y = -0.2; y < 0.2; y += 0.1 )
@@ -376,6 +376,7 @@ void Fluid::addFluid(float dt)
 			vec3 pos(rx+1, y+ry+1, z+rz);
 			//Density, mass, position, velocity (particle inputs)
 			Particle * p = new Particle(restDensity, mass, pos, glm::vec3(-3, 0, 0.0));
+			p->setIndex(1); 
 			theParticles.push_back(p);
 			Box * box = container( pos );
 			if( box->frame < frame )
@@ -386,31 +387,6 @@ void Fluid::addFluid(float dt)
 			box->particles.push_back( p );
 		}
 	}
-	/*/
-
-	for( float y = 0; y < 3; y += 0.1 )
-	{
-		for( float x = -0.5; x < 0.5; x += 0.1 )
-		{
-			for( float z = -0.5; z < 0.5; z += 0.1 )
-			{
-				float rx = 0.01*(float)rand() / RAND_MAX; 
-				float ry = 0.01*(float)rand() / RAND_MAX; 
-				float rz = 0.01*(float)rand() / RAND_MAX; 
-				vec3 pos(x+rx, y+ry, z+rz);
-				Particle * p = new Particle(1000, 1, pos, glm::vec3(0));
-				theParticles.push_back(p);
-				Box * box = container( pos );
-				if( box->frame < frame )
-				{
-					box->particles.clear();
-					box->frame = frame;
-				}
-				box->particles.push_back( p );
-			}
-		}
-	}
-	//*/
 }
 
 //**********************************************************************************************
@@ -418,13 +394,13 @@ void Fluid::addFluid(float dt)
 //**********************************************************************************************
 
 //Calls all the SPH fns
-void Fluid::Update(float dt, glm::vec3& externalForces)
+void Fluid::Update(float dt, force_t externalForce)
 {
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 10000 && frame % 4 == 0) {
-		//addFluid(dt);
-		addMultiFluid();
+		addFluid(dt);
+		//addMultiFluid();
 		//addLavaLamp(); 
 		if( frame == -1 )
 		{
@@ -482,7 +458,7 @@ void Fluid::Update(float dt, glm::vec3& externalForces)
 	}
 
 	computeDensity(dt);
-	computeForces(dt, externalForces);
+	computeForces(dt, externalForce);
 	integrate(dt); 
 	resolveCollisions();
 	frame++;
@@ -681,7 +657,7 @@ void Fluid::computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, 
 	interfaceForce = -sigmaI * ki * ni; 
 }
 
-void Fluid::computeForces(float dt, glm::vec3 externalForces)
+void Fluid::computeForces(float dt, force_t externalForce)
 {
 	//TODO - add other forces for now, just add gravity
 	for (int i = 0; i < theParticles.size(); i++) 
@@ -689,6 +665,7 @@ void Fluid::computeForces(float dt, glm::vec3 externalForces)
 		glm::vec3 pressureForce = computePressure(dt, i); 
 		glm::vec3 viscosityForce = computeViscosity(dt, i); 
 		glm::vec3 finalForce;
+		glm::vec3 externalForces = externalForce(theParticles.at(i)->getPosition());
 		if (!useMultiFluidCalcs) {
 			glm::vec3 surfaceTension = computeSurfaceTension(dt, i);  //TODO - may want to turn on/off based on multifluid
 			finalForce = pressureForce + theParticles.at(i)->getDensity()*externalForces + viscosityForce + surfaceTension;

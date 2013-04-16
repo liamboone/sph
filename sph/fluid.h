@@ -15,6 +15,8 @@
 
 using namespace glm;
 
+typedef vec3 ( *force_t )( vec3 );
+
 class Fluid
 {
 public:
@@ -31,7 +33,7 @@ public:
 	void addLavaLamp();  //Recreates the lavalamp example from http://www.matthiasmueller.info/publications/sca05.pdf
 
 	//Simulation functions
-	void Update(float dt, glm::vec3& externalForces);
+	void Update(float dt, force_t externalForce);
 	void findNeighbors();
 	void computeDensity(float dt);
 	float field( vec3 pos );
@@ -46,7 +48,7 @@ public:
 	glm::vec3 computeViscosity(float dt, int i); 
 	glm::vec3 computeSurfaceTension(float dt, int i); 
 	void computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, glm::vec3 &surfaceForce);
-	void computeForces(float dt, glm::vec3 externalForces);
+	void computeForces(float dt, force_t externalForce);
 
 	//Position & velocity integration
 	void integrate(float dt); 

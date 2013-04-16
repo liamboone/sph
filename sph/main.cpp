@@ -26,6 +26,7 @@ using namespace glm;
 int theFrameNum = 0; 
 bool isRecording = false;
 bool displayOn = true;
+bool gravity = true;
 
 int buttonPress;
 int old_X;
@@ -146,6 +147,9 @@ void keypress_cb(unsigned char key, int x, int y) {
 		isRecording = !isRecording; 
 		if (isRecording) theFrameNum = 0;
 		break;
+	case 'g':
+		gravity = !gravity;
+		break;
 	case '1':
 	case '2':
 	case '3':
@@ -198,6 +202,25 @@ void grabScreen()
     assert(error == IL_NO_ERROR);
 }
 
+vec3 gravityForce( vec3 p )
+{
+	return vec3( 0, -9.81, 0 );
+}
+
+vec3 noForce( vec3 p )
+{
+	return vec3( 0 );
+}
+
+vec3 vortexForce( vec3 p )
+{
+	vec2 f( p.x, p.z );
+	float r = glm::length( f );
+	f = glm::normalize( f );
+	vec3 F = 2.0f/(r+0.001f)*vec3( -f.y, 0, f.x );
+	return vec3( 0, -9.8, 0 ) + F;
+}
+
 void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -206,8 +229,9 @@ void display_cb() {
 	glutSetWindowTitle( title );
 	if( play || singleStep )
 	{
+		force_t externalForce = gravity ? vortexForce : noForce;
 		singleStep = false;
-		theFluid.Update(0.004, glm::vec3(0.0f, -9.8f, 0.0f));
+		theFluid.Update(0.004, externalForce);
 	}
 	if( displayOn )
 	{
