@@ -35,7 +35,7 @@ bool play = false;
 bool singleStep = false;
 int screenWidth = 640;
 int screenHeight = 480;
-int displayFlags = 3;
+int displayFlags = 0xFF;
 
 void resize_cb(int, int);
 void display_cb(void);

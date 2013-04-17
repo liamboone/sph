@@ -73,9 +73,10 @@ public:
 
 	//Creates the particles from an imported mesh obj
 	bool insideOutside(vec3 p);
+	std::vector<float> findCrossing(vec3 p);
 	void createParticlesFromMesh(); 
 	float rayTriangleIntersect(vec3 const& P0, vec3 const& V0, vec3 const& p1, vec3 const& p2, vec3 const& p3); 
-	bool rayCubeIntersect(vec3 const& P0);
+	bool footprintIntersect(vec3 const& P0);
 
 	//Draws the current frame 
     virtual void Draw(const glm::vec3& eyePos);

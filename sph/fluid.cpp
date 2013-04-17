@@ -1,10 +1,12 @@
 #include "fluid.h"
 #include <iostream>
+#include <algorithm>
+#include <cmath>
 
 //Globals
 const float radius = 0.0451f;
 const float h = 3*radius;
-const float k = 40.0f; //TODO - make this function dependant on the temp
+const float k = 40.0f;
 const float PI = 3.14159265f; 
 const float mu = 50.f;
 const float sigma = 0.6f;
@@ -22,10 +24,10 @@ omegai & omegas = 0.6
 
 //***************************************
 const bool useMultiFluidCalcs = true; 
-const bool loadFromMesh = !true; 
+const bool loadFromMesh = true; 
 
 //Container size
-//*
+/*
 const vec3 containerMin(-1.0, 0, -1.0);
 const vec3 containerMax(1.0, 4, 1.0);
 /*/
@@ -73,6 +75,7 @@ void Fluid::Reset()
 P0 = the point. 
 V0 = the ray direction
 p1, p2, p3 are the points on the triangle
+returns NaN for no intersection
 */
 float Fluid::rayTriangleIntersect(vec3 const& P0, vec3 const& V0, vec3 const& p1, vec3 const& p2, vec3 const& p3)
 {
@@ -100,44 +103,35 @@ float Fluid::rayTriangleIntersect(vec3 const& P0, vec3 const& V0, vec3 const& p1
 	u = f * (dot(s, h));
 
 	if (u < 0.0 || u > 1.0)
-		return -1;
+		return std::numeric_limits<float>::quiet_NaN();
 
 	//Calc the barycentric coord for v
 	vec3 q = cross(s, e1);
 	v = f * dot(rayDirection, q);
 
 	if (v < 0.0 || u + v > 1.0) {
-		return -1;
+		return std::numeric_limits<float>::quiet_NaN();
 	}
 
 	//Ray intersection
 	//float dotTest = dot(e2, q);
 	float t = f * dot(e2, q);
-	if (t > 0.00001) {
-		return t;
-	} else {
-		return -1;
-	}
+	return t;
 }
 
 
-bool Fluid::rayCubeIntersect(vec3 const& P0) {
+bool Fluid::footprintIntersect(vec3 const& P0) {
 
 	float xMax = theMesh->xmax;
 	float xMin = theMesh->xmin;
-	float yMax = theMesh->ymax;
-	float yMin = theMesh->ymin;
 	float zMax = theMesh->zmax;
 	float zMin = theMesh->zmin;
 
 	if (P0.x > xMin && P0.x < xMax)
 	{
-		if (P0.y > yMin && P0.y < yMax)
+		if (P0.z > zMin && P0.z < zMax)
 		{
-			if (P0.z > zMin && P0.z < zMax)
-			{
-				return true; 
-			}
+			return true; 
 		}
 	}
 
@@ -145,12 +139,12 @@ bool Fluid::rayCubeIntersect(vec3 const& P0) {
 	return false;
 }
 
-bool Fluid::insideOutside(vec3 p)
+std::vector<float> Fluid::findCrossing(vec3 p)
 {
+	std::vector<float> crossings;
 	//Check if inside the bounding box
-	if (rayCubeIntersect(p) == true)
+	if( footprintIntersect( p ) )
 	{
-		int numIntersects = 0; 
 		vector<vec4> points = *theMesh->getPoints(); 
 		for (unsigned int i = 0; i < (*theMesh->getFaces()).size(); i++)
 		//Then check if its actually inside the mesh
@@ -159,17 +153,15 @@ bool Fluid::insideOutside(vec3 p)
 			glm::vec3 p1(points[face[0]].x, points[face[0]].y, points[face[0]].z);
 			glm::vec3 p2(points[face[1]].x, points[face[1]].y, points[face[1]].z);
 			glm::vec3 p3(points[face[2]].x, points[face[2]].y, points[face[2]].z);
-			if (rayTriangleIntersect(p, vec3(0, 1, 0), p1, p2, p3) != -1) {
-				numIntersects++;
+			float t = rayTriangleIntersect(p, vec3(0, 1, 0), p1, p2, p3);
+			if( t == t ) //NaN check
+			{
+				crossings.push_back(t);
 			}
 		}
-		if (numIntersects % 2 == 0)
-			return false;
-		else 
-			return true;
-	} 
-	
-	return false; 
+	}
+	std::sort( crossings.begin(), crossings.end() );
+	return crossings; 
 }
 //********************************************************************************************
 //Particle creation 
@@ -177,15 +169,35 @@ bool Fluid::insideOutside(vec3 p)
 //Creates particles inside of theMesh obj
 void Fluid::createParticlesFromMesh()
 {
-	//Run through the grid & add particles if we are inside the mesh
-	for( float x = containerMin.x; x < containerMax.x; x+= 0.1f )
+	float stepsize = 0.07f;
+	for( float x = containerMin.x; x < containerMax.x; x+= stepsize )
 	{
-		for( float y = containerMin.y; y < containerMax.y; y+=0.1f )
+		for( float z = containerMin.z; z < containerMax.z; z+=stepsize )
 		{
-			for( float z = containerMin.z; z < containerMax.z; z+=0.1f )
+			vec3 castPos( x, containerMin.y, z );
+			std::vector<float> crossings = findCrossing(castPos);
+			if( crossings.size() <= 1 ) continue;
+			std::vector<float>::iterator it = crossings.begin();
+			int idx = 0;
+			bool noMore = false;
+			for( float y = containerMin.y; y < containerMax.y && !noMore; y+=stepsize )
 			{
+				if( *it > (y-containerMin.y) ) continue;
 				vec3 pos(x, y, z); 
-				if (insideOutside(pos) == true) {
+				while( *it < (y-containerMin.y) )
+				{
+					++it;
+					idx++;
+					if( it == crossings.end() )
+					{
+						noMore = true;
+						break;
+					}
+				}
+				--it;
+				idx--;
+				if( !noMore && idx % 2 == 0 )
+				{
 					//Make a little random
 					float rx = 0.001f*((float) rand() / (RAND_MAX)); 
 					float ry = 0.001f*((float) rand() / (RAND_MAX)); 
@@ -399,22 +411,23 @@ void Fluid::Update(float dt, force_t externalForce)
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 10000 && frame % 4 == 0) {
-		addFluid(dt);
+		//addFluid(dt);
 		//addMultiFluid();
 		//addLavaLamp(); 
-		if( frame == -1 )
+		if( frame == 0 )
 		{
 			for( float y = 0; y < 1; y += 0.07 )
 			{
-				for( float x = containerMin.x/4; x < containerMax.x/4; x += 0.07 )
+				for( float x = containerMin.x/3; x < containerMax.x/3; x += 0.07 )
 				{
-					for( float z = containerMin.z/4; z < containerMax.z/4; z += 0.07 )
+					for( float z = containerMin.z/3; z < containerMax.z/3; z += 0.07 )
 					{
 						float rx = 0.01f*(float)rand() / RAND_MAX; 
 						float ry = 0.01f*(float)rand() / RAND_MAX; 
 						float rz = 0.01f*(float)rand() / RAND_MAX; 
 						vec3 pos(x+rx, y+ry, z+rz);
 						Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0));
+						p->setIndex(1); 
 						theParticles.push_back(p);
 						Box * box = container( pos );
 						if( box->frame < frame )
@@ -437,6 +450,7 @@ void Fluid::Update(float dt, force_t externalForce)
 						float rz = 0.01f*(float)rand() / RAND_MAX; 
 						vec3 pos(x+rx, y+ry, z+rz);
 						Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0));
+						p->setIndex(2);
 						theParticles.push_back(p);
 						Box * box = container( pos );
 						if( box->frame < frame )
