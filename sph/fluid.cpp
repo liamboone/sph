@@ -24,7 +24,7 @@ omegai & omegas = 0.6
 
 //***************************************
 const bool useMultiFluidCalcs = true; 
-const bool loadFromMesh = true; 
+const bool loadFromMesh = !true; 
 
 //Container size
 /*
@@ -411,10 +411,10 @@ void Fluid::Update(float dt, force_t externalForce)
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 10000 && frame % 4 == 0) {
-		//addFluid(dt);
+		addFluid(dt);
 		//addMultiFluid();
 		//addLavaLamp(); 
-		if( frame == 0 )
+		if( frame == -1 )
 		{
 			for( float y = 0; y < 1; y += 0.07 )
 			{
@@ -477,7 +477,7 @@ void Fluid::Update(float dt, force_t externalForce)
 	resolveCollisions();
 	frame++;
 	
-	container.clear();
+	//container.clear();
 	for (int i = 0; i < theParticles.size(); i++)
 	{
 		Particle * p = theParticles.at(i);
@@ -698,6 +698,7 @@ void Fluid::computeForces(float dt, force_t externalForce)
 
 void Fluid::integrate(float dt)
 {
+	
 	//Euler just in case leapfrog is wrong
 	for (int i = 0; i < theParticles.size(); i++)
 	{
@@ -707,7 +708,7 @@ void Fluid::integrate(float dt)
 	}
 
 	return;
-
+	
 	//********************************************************************
 	//Leapfrog from http://image.diku.dk/projects/media/kelager.06.pdf
 	std::vector<glm::vec3> accel1; 

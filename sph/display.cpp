@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #define SHADOW_MAP_SIZE 1024
-#define DMAP_SIZE 60
+#define DMAP_SIZE 64
 
 //BEGIN glsl utilities
 // from swiftless.com

@@ -26,6 +26,7 @@ using namespace glm;
 int theFrameNum = 0; 
 bool isRecording = false;
 bool displayOn = true;
+bool useRaymarch = false;
 bool gravity = true;
 
 int buttonPress;
@@ -147,6 +148,9 @@ void keypress_cb(unsigned char key, int x, int y) {
 		isRecording = !isRecording; 
 		if (isRecording) theFrameNum = 0;
 		break;
+	case 'm':
+		useRaymarch = !useRaymarch; 
+		break;
 	case 'g':
 		gravity = !gravity;
 		break;
@@ -235,7 +239,10 @@ void display_cb() {
 	}
 	if( displayOn )
 	{
-		display.draw();
+		if( useRaymarch )
+			display.march();
+		else
+			display.draw();
 	}
 	if (isRecording) grabScreen(); 
 	glutSwapBuffers();
