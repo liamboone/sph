@@ -27,15 +27,30 @@ const bool useMultiFluidCalcs = true;
 const bool loadFromMesh = !true; 
 
 //Container size
-/*
-const vec3 containerMin(-1.0, 0, -1.0);
-const vec3 containerMax(1.0, 4, 1.0);
-/*/
-const vec3 containerMin(-2.0, 0, -2.0);
-const vec3 containerMax(2.0, 4, 2.0); 
-//*/
-Fluid::Fluid(void) : container( h, containerMin, containerMax)
+Fluid::Fluid(void) : container( h, vec3(-3.0f, 0.0f, -3.0f), vec3(3.0f, 6.0f, 3.0f))
 {
+	containerMin = vec3(-3.0, 0, -3.0);
+	containerMax = vec3(3.0, 6, 3.0);
+	frame = 0;
+	/*srand (time(NULL));*/
+
+	if (loadFromMesh == true)
+	{
+		theMesh = new obj();
+		string file = "..\\stanford_bunny\\bunny_scaled4.obj";  
+		//string file = "..\\bunny.obj";
+		objLoader* loader = new objLoader( file, theMesh );
+		theMesh->buildVBOs();
+		delete loader;
+
+		cout<<"The mesh size: "<<(*theMesh->getFaces()).size()<<endl; 
+	}
+}
+
+Fluid::Fluid(vec3 cMin, vec3 cMax) : container( h, cMin, cMax)
+{
+	containerMin = cMin;
+	containerMax = cMax;
 	frame = 0;
 	/*srand (time(NULL));*/
 
@@ -416,11 +431,11 @@ void Fluid::Update(float dt, force_t externalForce)
 		//addLavaLamp(); 
 		if( frame == -1 )
 		{
-			for( float y = 0; y < 1; y += 0.07 )
+			for( float y = 0; y < 3; y += 0.07 )
 			{
-				for( float x = containerMin.x/3; x < containerMax.x/3; x += 0.07 )
+				for( float x = containerMin.x; x < containerMin.x/3; x += 0.07 )
 				{
-					for( float z = containerMin.z/3; z < containerMax.z/3; z += 0.07 )
+					for( float z = containerMin.z; z < containerMin.z/3; z += 0.07 )
 					{
 						float rx = 0.01f*(float)rand() / RAND_MAX; 
 						float ry = 0.01f*(float)rand() / RAND_MAX; 
@@ -439,7 +454,7 @@ void Fluid::Update(float dt, force_t externalForce)
 					}
 				}
 			}
-			for( float y = 0; y < 1; y += 0.07 )
+			for( float y = 0; y < 3; y += 0.07 )
 			{
 				for( float x = containerMax.x/3; x < containerMax.x; x += 0.07 )
 				{
@@ -968,10 +983,11 @@ const std::vector<Particle*>& Fluid::getParticles()
 	return theParticles; 
 }
 
-float Fluid::field( vec3 pos )
+vec4 Fluid::field( vec3 pos, std::map<int, vec3> colorMap )
 {
 	std::vector< Particle * >::iterator it;
 	float potential = 0;
+	vec3 color(0.0f);
 
 	for( int x = -1; x <= 1; x ++ )
 	{
@@ -987,10 +1003,12 @@ float Fluid::field( vec3 pos )
 				{
 					float rho = (*it)->getDensity(); 
 					float r = glm::distance( (*it)->getPosition(), pos );
-					potential += (*it)->getMass() / (1e-15f + rho) * wPoly6(r, h); 
+					float weight = (*it)->getMass() / (1e-15f + rho) * wPoly6(r, h);
+					color += colorMap[(*it)->getIndex()]*weight;
+					potential += weight; 
 				}
 			}
 		}
 	}
-	return potential;
+	return vec4( color, potential );
 }

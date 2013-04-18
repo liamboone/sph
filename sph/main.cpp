@@ -233,7 +233,7 @@ void display_cb() {
 	glutSetWindowTitle( title );
 	if( play || singleStep )
 	{
-		force_t externalForce = gravity ? vortexForce : noForce;
+		force_t externalForce = gravity ? gravityForce : noForce;
 		singleStep = false;
 		theFluid.Update(0.004, externalForce);
 	}
