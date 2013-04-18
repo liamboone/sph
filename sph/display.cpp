@@ -74,9 +74,9 @@ void Display::printShaderInfoLog(int shader)
 
 Display::Display() 
 {
-	colorMap[1] = vec3( 1.0f, 0.5f, 0.0f );
+	colorMap[1] = vec3( 1.0f, 0.5f, 0.5f );
 	colorMap[2] = vec3( 0.5f, 0.5f, 1.0f );
-	colorMap[4] = vec3( 0.5f, 1.0f, 0.3f );
+	colorMap[4] = vec3( 0.5f, 1.0f, 0.5f );
 }
 
 Display::~Display()
@@ -393,7 +393,6 @@ void Display::setFluids(Fluid *fluid)
 
 void Display::march()
 {
-
 	glUseProgram( raymarchShaderProgram );
 	glUniform1i( u_distanceMapLocation, 4 );
 	glActiveTexture(GL_TEXTURE4);
@@ -458,9 +457,9 @@ void Display::march()
 	float * texels = new float[ DMAP_SIZE*DMAP_SIZE*DMAP_SIZE*4 ];
 	for( int i = 0; i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE*4; i +=4 )
 	{
-		texels[i] = 0;
-		texels[i+1] = 0;
-		texels[i+2] = 0;
+		texels[i] = 0.25;
+		texels[i+1] = 0.25;
+		texels[i+2] = 0.25;
 		texels[i+3] = 0;
 	}
 

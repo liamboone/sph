@@ -27,10 +27,10 @@ const bool useMultiFluidCalcs = true;
 const bool loadFromMesh = !true; 
 
 //Container size
-Fluid::Fluid(void) : container( h, vec3(-3.0f, 0.0f, -3.0f), vec3(3.0f, 6.0f, 3.0f))
+Fluid::Fluid(void) : container( h, vec3(-1.0f, 0.0f, -1.0f), vec3(1.0f, 2.0f, 1.0f))
 {
-	containerMin = vec3(-3.0, 0, -3.0);
-	containerMax = vec3(3.0, 6, 3.0);
+	containerMin = vec3(-1.0, 0, -1.0);
+	containerMax = vec3(1.0, 2, 1.0);
 	frame = 0;
 	/*srand (time(NULL));*/
 
@@ -904,6 +904,7 @@ glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
 		float lrs = lr*lr-h*h;
+		lrs *= lrs;
 		float c = 315.0f / (64.0f * PI * pow(h, 9)); 
 		float x = -6*r.x*lrs;
 		float y = -6*r.y*lrs;

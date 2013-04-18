@@ -221,7 +221,7 @@ vec3 vortexForce( vec3 p )
 	vec2 f( p.x, p.z );
 	float r = glm::length( f );
 	f = glm::normalize( f );
-	vec3 F = 2.0f/(r+0.001f)*vec3( -f.y, 0, f.x );
+	vec3 F = 1.0f/(r+0.001f)*vec3( -f.y, 0, f.x );
 	return vec3( 0, -9.8, 0 ) + F;
 }
 

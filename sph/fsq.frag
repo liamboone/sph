@@ -34,6 +34,10 @@ vec3 castRayToFloor( vec3 pos, vec3 dir, vec3 lpos )
 	return vec3( 0.6, 0.8, 1 );
 }
 
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
 void main()
 {
 	vec3 lpos = vec3(-5,10,3);
@@ -68,6 +72,7 @@ void main()
 
 		outColor = vec4( castRayToFloor( eye, view, lpos ), 1 );
 
+		t -= 0.05;
 		vec3 origin = eye + view * t;
 		for( int i = 0; i < 200; i ++ )
 		{
@@ -102,10 +107,10 @@ void main()
 				//schlick's approximation:
 				//R = R_0 + (1-R_0)*(1-cos(theta))^5
 				float R = R_0 + (1-R_0)*pow(1-dot(normalize(view),normal),5);
-				outColor = vec4(baseColor,1) * ((1-R)*refrcolor + R*(reflcolor + specularTerm));
+				outColor = vec4(baseColor+0.5,1) * ((1-R)*refrcolor + R*(reflcolor)) + specularTerm;
 				break;
 			}
-			t += 0.05;
+			t += 0.05 + rand( coords+i )/100;
 			origin = eye + view * t;
 			if( t > exit )
 				break;
