@@ -46,7 +46,7 @@ void mouseDrag_cb(int, int);
 void mouseClick_cb(int, int, int, int);
 
 Display display;
-Fluid theFluid;
+Fluid theFluid(vec3(-2.0f, 0.0f, -2.0f), vec3(2.0f, 4.0f, 2.0f));
 
 
 int main(int argc, char** argv) 
@@ -229,13 +229,13 @@ void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	char title[100];
-	sprintf( title, "SPH frame: %d, #particles: %d", theFluid.frame, theFluid.getParticles().size() ); 
+	sprintf_s( title, 100, "SPH frame: %d, #particles: %d", theFluid.frame, theFluid.getParticles().size() ); 
 	glutSetWindowTitle( title );
 	if( play || singleStep )
 	{
 		force_t externalForce = gravity ? gravityForce : noForce;
 		singleStep = false;
-		theFluid.Update(0.004, externalForce);
+		theFluid.Update(0.004f, externalForce);
 	}
 	if( displayOn )
 	{

@@ -72,7 +72,6 @@ void main()
 
 		outColor = vec4( castRayToFloor( eye, view, lpos ), 1 );
 
-		t -= 0.05;
 		vec3 origin = eye + view * t;
 		for( int i = 0; i < 200; i ++ )
 		{
@@ -93,6 +92,7 @@ void main()
 					}
 				}
 				vec3 baseColor = texture( u_distanceMap, dMapCoords ).rgb;
+				baseColor = sqrt(baseColor);
 				origin = eye + view * t;
 				vec3 light = normalize(origin-lpos);
 				outColor = vec4( 0.5,0.5,1,1 );
@@ -107,10 +107,10 @@ void main()
 				//schlick's approximation:
 				//R = R_0 + (1-R_0)*(1-cos(theta))^5
 				float R = R_0 + (1-R_0)*pow(1-dot(normalize(view),normal),5);
-				outColor = vec4(baseColor+0.5,1) * ((1-R)*refrcolor + R*(reflcolor)) + specularTerm;
+				outColor = (vec4(baseColor,1)*(1-R)*refrcolor + R*(reflcolor)) + specularTerm;
 				break;
 			}
-			t += 0.05 + rand( coords+i )/100;
+			t += 0.05 + rand( coords+i )/50;
 			origin = eye + view * t;
 			if( t > exit )
 				break;

@@ -21,7 +21,6 @@ class Fluid
 {
 public:
 	Fluid(vec3 cMin, vec3 cMax);
-	Fluid(void);
 	~Fluid(void);
 
 	const std::vector<Particle*> &getParticles();

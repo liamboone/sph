@@ -10,6 +10,8 @@ Container::Container( float h, vec3 lower, vec3 upper )
 	width = (int)(span.x/h);
 	height = (int)(span.y/h);
 	depth = (int)(span.z/h);
+
+	radius = h;
 }
 
 Container::~Container() { }

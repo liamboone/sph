@@ -13,7 +13,8 @@ char* Display::textFileRead(const char* fileName) {
     
     assert(fileName != NULL);
 
-	FILE *file = fopen(fileName, "rt");
+	FILE *file;
+	fopen_s(&file, fileName, "rt");
 	
 	assert(file != NULL);
 	
@@ -400,8 +401,8 @@ void Display::march()
 	std::map<int, bool> toCalc;
 	std::vector<Particle*> particles = theFluid->getParticles();
 	
-	vec3 cMin = theFluid->containerMin;
-	vec3 cMax = theFluid->containerMax;
+	vec3 cMin = theFluid->containerMin-vec3(0.5,0,0.5);
+	vec3 cMax = theFluid->containerMax+vec3(0.5,1,0.5);
 	vec3 span = cMax-cMin;
 	
 	glUniform3f( u_cMinLocation, cMin.x, cMin.y, cMin.z );

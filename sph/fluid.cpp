@@ -26,27 +26,6 @@ omegai & omegas = 0.6
 const bool useMultiFluidCalcs = true; 
 const bool loadFromMesh = !true; 
 
-//Container size
-Fluid::Fluid(void) : container( h, vec3(-1.0f, 0.0f, -1.0f), vec3(1.0f, 2.0f, 1.0f))
-{
-	containerMin = vec3(-1.0, 0, -1.0);
-	containerMax = vec3(1.0, 2, 1.0);
-	frame = 0;
-	/*srand (time(NULL));*/
-
-	if (loadFromMesh == true)
-	{
-		theMesh = new obj();
-		string file = "..\\stanford_bunny\\bunny_scaled4.obj";  
-		//string file = "..\\bunny.obj";
-		objLoader* loader = new objLoader( file, theMesh );
-		theMesh->buildVBOs();
-		delete loader;
-
-		cout<<"The mesh size: "<<(*theMesh->getFaces()).size()<<endl; 
-	}
-}
-
 Fluid::Fluid(vec3 cMin, vec3 cMax) : container( h, cMin, cMax)
 {
 	containerMin = cMin;
@@ -268,13 +247,13 @@ void Fluid::addMultiFluid()
 		}
 	}
 	//Heavier fluid pouring from top 
-	for (float z = -0.1; z <= 0.12; z+=0.1)
+	for (float z = -0.1f; z <= 0.12f; z+=0.1f)
 	{
-		for (float x = -0.1; x <= 0.12; x+=0.1)
+		for (float x = -0.1f; x <= 0.12f; x+=0.1f)
 		{
-			float rx = 0.01*((double) rand() / (RAND_MAX)); 
-			float ry = 0.01*((double) rand() / (RAND_MAX)); 
-			float rz = 0.01*((double) rand() / (RAND_MAX)); 
+			float rx = 0.01f*((float) rand() / (RAND_MAX)); 
+			float ry = 0.01f*((float) rand() / (RAND_MAX)); 
+			float rz = 0.01f*((float) rand() / (RAND_MAX)); 
 
 			vec3 pos(x+rx-0.5, containerMax.y+ry, z+rz-0.5);
 			Particle * p = new Particle(restDensity+200, mass, pos, glm::vec3(0,-1,0));
@@ -290,13 +269,13 @@ void Fluid::addMultiFluid()
 		}
 	}
 	//Lighter fluid pouring from top 
-	for (float z = -0.1; z <= 0.2; z+=0.12)
+	for (float z = -0.1f; z <= 0.2f; z+=0.12f)
 	{
-		for (float x = -0.1; x <= 0.2; x+=0.12)
+		for (float x = -0.1f; x <= 0.2f; x+=0.12f)
 		{
-			float rx = 0.01*((double) rand() / (RAND_MAX)); 
-			float ry = 0.01*((double) rand() / (RAND_MAX)); 
-			float rz = 0.01*((double) rand() / (RAND_MAX)); 
+			float rx = 0.01f*((float) rand() / (RAND_MAX)); 
+			float ry = 0.01f*((float) rand() / (RAND_MAX)); 
+			float rz = 0.01f*((float) rand() / (RAND_MAX)); 
 
 			vec3 pos(x+rx+0.5, containerMax.y+ry, z+rz+0.5); 
 			Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0,-1,0));
@@ -318,11 +297,11 @@ void Fluid::addLavaLamp()
 {
 	if (frame == 0) {
 		//Add red fluid (this will start at the bottom & rise) 
-		for( float y = 0; y < 0.55; y += 0.07 )
+		for( float y = 0.0f; y < 0.55f; y += 0.07f )
 		{
-			for( float x = -0.2; x < containerMax.x; x += 0.07 )
+			for( float x = -0.2f; x < containerMax.x; x += 0.07f )
 			{
-				for( float z = containerMin.z; z < containerMax.z; z += 0.07 )
+				for( float z = containerMin.z; z < containerMax.z; z += 0.07f )
 				{
 					float rx = 0.01f*(float)rand() / RAND_MAX; 
 					float ry = 0.01f*(float)rand() / RAND_MAX; 
@@ -344,11 +323,11 @@ void Fluid::addLavaLamp()
 			}
 		}
 		//Add blue fluid at the top (it will sink)
-		for( float y = 1; y < 1.8; y += 0.07 )
+		for( float y = 1.0f; y < 1.8f; y += 0.07f )
 		{
-			for( float x = -0.4; x < 0.4; x += 0.07 )
+			for( float x = -0.4f; x < 0.4f; x += 0.07f )
 			{
-				for( float z = -0.4; z < 0.4; z += 0.07 )
+				for( float z = -0.4f; z < 0.4f; z += 0.07f )
 				{
 					float rx = 0.01f*(float)rand() / RAND_MAX;
 					float ry = 0.01f*(float)rand() / RAND_MAX;
@@ -392,13 +371,13 @@ void Fluid::addLavaLamp()
 void Fluid::addFluid(float dt)
 {
 	//Density, mass, position, velocity (particle inputs)
-	for (float z = -0.2; z < 0.2; z+=0.1)
+	for (float z = -0.2f; z < 0.2f; z+=0.1f)
     {
-		for (float y = -0.2; y < 0.2; y += 0.1 )
+		for (float y = -0.2f; y < 0.2f; y += 0.1f )
 		{
-			float rx = 0.01*((double) rand() / (RAND_MAX)); 
-			float ry = 0.01*((double) rand() / (RAND_MAX)); 
-			float rz = 0.01*((double) rand() / (RAND_MAX)); 
+			float rx = 0.01f*((float) rand() / (RAND_MAX)); 
+			float ry = 0.01f*((float) rand() / (RAND_MAX)); 
+			float rz = 0.01f*((float) rand() / (RAND_MAX)); 
 			
 			vec3 pos(rx+1, y+ry+1, z+rz);
 			//Density, mass, position, velocity (particle inputs)
@@ -425,23 +404,23 @@ void Fluid::Update(float dt, force_t externalForce)
 {
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
-	} else if (loadFromMesh == false && theParticles.size() < 10000 && frame % 4 == 0) {
-		addFluid(dt);
+	} else if (loadFromMesh == false && theParticles.size() < 3000 && frame % 4 == 0) {
+		//addFluid(dt);
 		//addMultiFluid();
 		//addLavaLamp(); 
-		if( frame == -1 )
+		if( frame == 0 )
 		{
-			for( float y = 0; y < 3; y += 0.07 )
+			for( float y = 0; y < 3; y += 0.07f )
 			{
-				for( float x = containerMin.x; x < containerMin.x/3; x += 0.07 )
+				for( float x = containerMin.x; x < containerMin.x/3; x += 0.07f )
 				{
-					for( float z = containerMin.z; z < containerMin.z/3; z += 0.07 )
+					for( float z = containerMin.z; z < containerMin.z/3; z += 0.07f )
 					{
 						float rx = 0.01f*(float)rand() / RAND_MAX; 
 						float ry = 0.01f*(float)rand() / RAND_MAX; 
 						float rz = 0.01f*(float)rand() / RAND_MAX; 
 						vec3 pos(x+rx, y+ry, z+rz);
-						Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0));
+						Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0));
 						p->setIndex(1); 
 						theParticles.push_back(p);
 						Box * box = container( pos );
@@ -454,17 +433,17 @@ void Fluid::Update(float dt, force_t externalForce)
 					}
 				}
 			}
-			for( float y = 0; y < 3; y += 0.07 )
+			for( float y = 0; y < 3; y += 0.07f )
 			{
-				for( float x = containerMax.x/3; x < containerMax.x; x += 0.07 )
+				for( float x = containerMax.x/3; x < containerMax.x; x += 0.07f )
 				{
-					for( float z = containerMax.z/3; z < containerMax.z; z += 0.07 )
+					for( float z = containerMax.z/3; z < containerMax.z; z += 0.07f )
 					{
 						float rx = 0.01f*(float)rand() / RAND_MAX; 
 						float ry = 0.01f*(float)rand() / RAND_MAX; 
 						float rz = 0.01f*(float)rand() / RAND_MAX; 
 						vec3 pos(x+rx, y+ry, z+rz);
-						Particle * p = new Particle(restDensity, mass, pos, glm::vec3(0));
+						Particle * p = new Particle(restDensity+200, mass, pos, glm::vec3(0));
 						p->setIndex(2);
 						theParticles.push_back(p);
 						Box * box = container( pos );
@@ -493,7 +472,7 @@ void Fluid::Update(float dt, force_t externalForce)
 	frame++;
 	
 	//container.clear();
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		Particle * p = theParticles.at(i);
 		Box * box = container( p->getPosition() );
@@ -511,7 +490,7 @@ void Fluid::Update(float dt, force_t externalForce)
 //Finds all the the particles current neighbors and stores them in the particle's neighbors vector
 void Fluid::findNeighbors()
 {
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		Particle * p = theParticles.at(i);
 		p->clearNeighbors();
@@ -555,12 +534,12 @@ void Fluid::findNeighbors()
 //Finds the density at the current timestep
 void Fluid::computeDensity(float dt)
 {
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		float density = 0; //theParticles.at( i ).getRestDensity();
 		vec3 pos_i = theParticles.at(i)->getPosition();
 		std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
-		for (int j = 0; j < neighbors.size(); j++)
+		for (unsigned int j = 0; j < neighbors.size(); j++)
 		{
 			float r = glm::distance(pos_i, neighbors.at(j)->getPosition()); 
 			density += (neighbors.at(j)->getMass() * wPoly6(r, h));
@@ -581,7 +560,7 @@ glm::vec3 Fluid::computePressure(float dt, int i )
 		pi = (k * (theParticles.at(i)->getDensity() - theParticles.at(i)->getRestDensity())); 
 	}
 	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
-	for (int j = 0; j < neighbors.size(); j++) {
+	for (unsigned int j = 0; j < neighbors.size(); j++) {
 		float pj;
 		if (useMultiFluidCalcs) {
 			pj = (neighbors.at(j)->getK() * (neighbors.at(j)->getDensity() - neighbors.at(j)->getRestDensity())); 
@@ -600,7 +579,7 @@ glm::vec3 Fluid::computeViscosity(float dt, int i)
 {
 	glm::vec3 v(0.0); 
 	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
-	for (int j = 0; j < neighbors.size(); j++)
+	for (unsigned int j = 0; j < neighbors.size(); j++)
 	{
 		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
 		glm::vec3 vel = (neighbors.at(j)->getVelocity() - theParticles.at(i)->getVelocity()) / (neighbors.at(j)->getDensity() + 1e-15f);
@@ -623,7 +602,7 @@ glm::vec3 Fluid::computeSurfaceTension(float dt, int i)
 	glm::vec3 n(0.0); 
     float k = 0.0; 
 	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
-	for (int j = 0; j < neighbors.size(); j++)
+	for (unsigned int j = 0; j < neighbors.size(); j++)
 	{
 		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
 
@@ -650,7 +629,7 @@ void Fluid::computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, 
 	glm::vec3 nCp(0.0); 
 
 	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
-	for (int j = 0; j < neighbors.size(); j++)
+	for (unsigned int j = 0; j < neighbors.size(); j++)
 	{
 		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
 		float mass = neighbors.at(j)->getMass(); 
@@ -689,7 +668,7 @@ void Fluid::computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, 
 void Fluid::computeForces(float dt, force_t externalForce)
 {
 	//TODO - add other forces for now, just add gravity
-	for (int i = 0; i < theParticles.size(); i++) 
+	for (unsigned int i = 0; i < theParticles.size(); i++) 
 	{
 		glm::vec3 pressureForce = computePressure(dt, i); 
 		glm::vec3 viscosityForce = computeViscosity(dt, i); 
@@ -715,7 +694,7 @@ void Fluid::integrate(float dt)
 {
 	
 	//Euler just in case leapfrog is wrong
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		Particle * p = theParticles.at(i); 
 		p->setVelocity(p->getVelocity() + dt * p->getForce() / p->getDensity());
@@ -728,7 +707,7 @@ void Fluid::integrate(float dt)
 	//Leapfrog from http://image.diku.dk/projects/media/kelager.06.pdf
 	std::vector<glm::vec3> accel1; 
 	std::vector<vec3> vel1; 
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		glm::vec3 a = theParticles.at(i)->getForce() / theParticles.at(i)->getDensity();
 		accel1.push_back(a);
@@ -753,7 +732,7 @@ void Fluid::resolveCollisions()
 {
 	float damping = 1.f;
 	// p.velocity = p.velocity - 2.0 * Dot(normal, p.velocity) * normal;
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		glm::vec3 pos = theParticles.at(i)->getPosition();
 		glm::vec3 vel = theParticles.at(i)->getVelocity();
@@ -813,11 +792,11 @@ void  Fluid::computeDiffusion(float dt)
 {
  
 	//Temp diffusion constant in the paper -> 0.0001.
-	float c = 0.0001; 
-	for (int i = 0; i < theParticles.size(); i++) 
+	float c = 0.0001f; 
+	for (unsigned int i = 0; i < theParticles.size(); i++) 
 	{
 		float deltaTemp = 0.f;
-		for (int j = 0; j < theParticles.at(i)->getNeighbors().size(); j++)
+		for (unsigned int j = 0; j < theParticles.at(i)->getNeighbors().size(); j++)
 		{
 			glm::vec3 r = theParticles.at(i)->getPosition() - theParticles.at(i)->getNeighbors().at(j)->getPosition();
 			float mass = theParticles.at(i)->getNeighbors().at(j)->getMass(); 
@@ -845,7 +824,7 @@ void  Fluid::manageAirBubbles()
 {
 	//Look for large gradient of cp & positive y component & generate air particles with an offset
 	//TODO - not sure what cp is exactly...is it just 1?  Then wouldn't it be the same as cs then??
-	for (int i = 0; i < theParticles.size(); i++)
+	for (unsigned int i = 0; i < theParticles.size(); i++)
 	{
 		glm::vec3 csGrad = theParticles.at(i)->getCsGrad(); 
 		glm::vec3 cpGrad = theParticles.at(i)->getCpGrad(); 
@@ -888,7 +867,7 @@ void  Fluid::manageAirBubbles()
 //********************************************************************************************
 //Kernal functions
 //********************************************************************************************
-float Fluid::wPoly6(float r, float h)
+inline float Fluid::wPoly6(float r, float h)
 {
 	if (0 <= r && r <= h) {
 		float c = 315.0f / (64.0f * PI * pow(h, 9)); 
@@ -899,7 +878,7 @@ float Fluid::wPoly6(float r, float h)
 	}
 }
 
-glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
+inline glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
 {
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
@@ -916,7 +895,7 @@ glm::vec3 Fluid::wPoly6Grad(glm::vec3 r, float h)
 	}
 }
 
-float Fluid::wPoly6Lap(glm::vec3 r, float h)
+inline float Fluid::wPoly6Lap(glm::vec3 r, float h)
 {
 	float c = 315.0f / (64.0f * PI * pow(h, 9)); 
 	float lr = glm::length(r); 
@@ -930,7 +909,7 @@ float Fluid::wPoly6Lap(glm::vec3 r, float h)
 }
 
 //Used for pressure calcs
-float Fluid::wSpiky(float r, float h)
+inline float Fluid::wSpiky(float r, float h)
 {
 	if (0 <= r && r <= h) {
 		float c = 15.0f / (PI * pow(h, 6)); 
@@ -940,15 +919,15 @@ float Fluid::wSpiky(float r, float h)
 		return 0; 
 	}
 }
-vec3 Fluid::wSpikyGrad(vec3 r, float h)
+inline vec3 Fluid::wSpikyGrad(vec3 r, float h)
 {
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
 		float c = 15.0f / (PI * pow(h, 6)); 
 		float numerator = pow(lr - h, 2);
-		float x = -3.f*r.x*numerator/(lr+1e-15);
-		float y = -3.f*r.y*numerator/(lr+1e-15);
-		float z = -3.f*r.z*numerator/(lr+1e-15);
+		float x = -3.f*r.x*numerator/(lr+1e-15f);
+		float y = -3.f*r.y*numerator/(lr+1e-15f);
+		float z = -3.f*r.z*numerator/(lr+1e-15f);
 		vec3 w = vec3( x, y, z );
 		return c*w;
 	} else {
@@ -956,17 +935,17 @@ vec3 Fluid::wSpikyGrad(vec3 r, float h)
 	}
 }
 
-float Fluid::wViscosity(float r, float h)
+inline float Fluid::wViscosity(float r, float h)
 {
 	return 0.0f;
 }
 
-glm::vec3 Fluid::wViscosityGrad(glm::vec3 r, float h)
+inline glm::vec3 Fluid::wViscosityGrad(glm::vec3 r, float h)
 {
 	return vec3(0.0f);
 }
 
-float Fluid::wViscosityLap(glm::vec3 r, float h)
+inline float Fluid::wViscosityLap(glm::vec3 r, float h)
 {
 	float lr = length( r );
 	if (0 <= lr && lr <= h) {
