@@ -27,6 +27,7 @@ public:
 	~Container();
 	Box * operator()( vec3 p );
 	void clear() { grid.clear(); }
+	float radius;
 
 private:
 	std::map<int, Box> grid;

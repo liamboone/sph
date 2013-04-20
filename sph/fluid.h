@@ -20,7 +20,7 @@ typedef vec3 ( *force_t )( vec3 );
 class Fluid
 {
 public:
-	Fluid(void);
+	Fluid(vec3 cMin, vec3 cMax);
 	~Fluid(void);
 
 	const std::vector<Particle*> &getParticles();
@@ -36,7 +36,7 @@ public:
 	void Update(float dt, force_t externalForce);
 	void findNeighbors();
 	void computeDensity(float dt);
-	float field( vec3 pos );
+	vec4 field( vec3 pos, std::map<int,vec3> colorMap );
 	//Functions for multiple fluid & bubble simulation
 	void computeDiffusion(float dt); 
 	glm::vec3 computeArtificialBuoyancy(int i); 
@@ -83,6 +83,8 @@ public:
 
 	int frame;
 	Container container;
+	vec3 containerMax;
+	vec3 containerMin;
 
 protected:
 	//If we create the particles from a mesh

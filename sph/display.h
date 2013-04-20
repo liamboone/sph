@@ -98,6 +98,8 @@ private:
 	unsigned int u_resolutionLocation;
 	unsigned int u_rayCamPositionLocation;
 	unsigned int u_distanceMapLocation;
+	unsigned int u_cMinLocation;
+	unsigned int u_cMaxLocation;
 };
 
 #endif

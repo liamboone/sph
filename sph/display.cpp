@@ -13,7 +13,8 @@ char* Display::textFileRead(const char* fileName) {
     
     assert(fileName != NULL);
 
-	FILE *file = fopen(fileName, "rt");
+	FILE *file;
+	fopen_s(&file, fileName, "rt");
 	
 	assert(file != NULL);
 	
@@ -74,9 +75,9 @@ void Display::printShaderInfoLog(int shader)
 
 Display::Display() 
 {
-	colorMap[1] = vec3( 1.0f, 0.5f, 0.0f );
+	colorMap[1] = vec3( 1.0f, 0.5f, 0.5f );
 	colorMap[2] = vec3( 0.5f, 0.5f, 1.0f );
-	colorMap[4] = vec3( 0.5f, 1.0f, 0.3f );
+	colorMap[4] = vec3( 0.5f, 1.0f, 0.5f );
 }
 
 Display::~Display()
@@ -130,6 +131,8 @@ void Display::init()
 	u_resolutionLocation		= glGetUniformLocation(raymarchShaderProgram, "u_resolution");
 	u_rayCamPositionLocation	= glGetUniformLocation(raymarchShaderProgram, "u_camPosition");
 	u_distanceMapLocation		= glGetUniformLocation(raymarchShaderProgram, "u_distanceMap");
+	u_cMinLocation				= glGetUniformLocation(raymarchShaderProgram, "u_cMin");
+	u_cMaxLocation				= glGetUniformLocation(raymarchShaderProgram, "u_cMax");
 	
 	u_shadowModelMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_modelMatrix");
 	u_shadowProjMatrixLocation	= glGetUniformLocation(shadowShaderProgram, "u_projMatrix");
@@ -395,16 +398,90 @@ void Display::march()
 	glUniform1i( u_distanceMapLocation, 4 );
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_3D,fluidTexture);
+	std::map<int, bool> toCalc;
+	std::vector<Particle*> particles = theFluid->getParticles();
 	
-	float * texels = new float[ DMAP_SIZE*DMAP_SIZE*DMAP_SIZE ];
-	for( int i = 0; i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE; i ++ )
+	vec3 cMin = theFluid->containerMin-vec3(0.5,0,0.5);
+	vec3 cMax = theFluid->containerMax+vec3(0.5,1,0.5);
+	vec3 span = cMax-cMin;
+	
+	glUniform3f( u_cMinLocation, cMin.x, cMin.y, cMin.z );
+	glUniform3f( u_cMaxLocation, cMax.x, cMax.y, cMax.z );
+
+	for (unsigned int pid = 0; pid < particles.size(); pid++)
 	{
-		float x = (float)( (i)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6 - 3;
-		float y = (float)( (i/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6;
-		float z = (float)( (i/DMAP_SIZE/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * 6 - 3;
-		texels[i] = theFluid->field( vec3( x, y, z ) );
+		vec3 P = (particles.at(pid)->getPosition()-cMin)/span;
+
+		float x = P.x;
+		float y = P.y;
+		float z = P.z;
+
+		int i,j,k;
+	
+		i = (int) floor( DMAP_SIZE * x );
+		j = (int) floor( DMAP_SIZE * y );
+		k = (int) floor( DMAP_SIZE * z );
+
+		int index = i + j*DMAP_SIZE + k*DMAP_SIZE*DMAP_SIZE;
+
+		toCalc[index+1+DMAP_SIZE+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+1+DMAP_SIZE+0					] = true;
+		toCalc[index+1+DMAP_SIZE-DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+1+0		+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+1+0		+0					] = true;
+		toCalc[index+1+0		-DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+1-DMAP_SIZE+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+1-DMAP_SIZE+0					] = true;
+		toCalc[index+1-DMAP_SIZE-DMAP_SIZE*DMAP_SIZE] = true;
+
+		toCalc[index+0+DMAP_SIZE+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+0+DMAP_SIZE+0					] = true;
+		toCalc[index+0+DMAP_SIZE-DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+0+0		+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+0+0		+0					] = true;
+		toCalc[index+0+0		-DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+0-DMAP_SIZE+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index+0-DMAP_SIZE+0					] = true;
+		toCalc[index+0-DMAP_SIZE-DMAP_SIZE*DMAP_SIZE] = true;
+
+		toCalc[index-1+DMAP_SIZE+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index-1+DMAP_SIZE+0					] = true;
+		toCalc[index-1+DMAP_SIZE-DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index-1+0		+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index-1+0		+0					] = true;
+		toCalc[index-1+0		-DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index-1-DMAP_SIZE+DMAP_SIZE*DMAP_SIZE] = true;
+		toCalc[index-1-DMAP_SIZE+0					] = true;
+		toCalc[index-1-DMAP_SIZE-DMAP_SIZE*DMAP_SIZE] = true;
 	}
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, DMAP_SIZE, DMAP_SIZE, DMAP_SIZE, 0, GL_RED, GL_FLOAT, texels);
+
+	float * texels = new float[ DMAP_SIZE*DMAP_SIZE*DMAP_SIZE*4 ];
+	for( int i = 0; i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE*4; i +=4 )
+	{
+		texels[i] = 0.25;
+		texels[i+1] = 0.25;
+		texels[i+2] = 0.25;
+		texels[i+3] = 0;
+	}
+
+	std::map<int,bool>::iterator it;
+	for( it = toCalc.begin(); it != toCalc.end(); ++ it )
+	{
+		int i = it->first;
+		if( i >= 0 && i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE )
+		{
+			float x = (float)( (i)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * span.x + cMin.x;
+			float y = (float)( (i/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * span.y + cMin.y;
+			float z = (float)( (i/DMAP_SIZE/DMAP_SIZE)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * span.z + cMin.z;
+			vec4 field = theFluid->field( vec3( x, y, z ), colorMap );
+			texels[4*i] = field.x;
+			texels[4*i+1] = field.y;
+			texels[4*i+2] = field.z;
+			texels[4*i+3] = field.w;
+		}
+	}
+
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, DMAP_SIZE, DMAP_SIZE, DMAP_SIZE, 0, GL_RGBA, GL_FLOAT, texels);
 	delete texels;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

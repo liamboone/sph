@@ -46,9 +46,16 @@ void mouseDrag_cb(int, int);
 void mouseClick_cb(int, int, int, int);
 
 Display display;
-Fluid theFluid;
+
+//Fluid theFluid;
 int theMenu = 0;
 
+Fluid theFluid(vec3(-2.0f, 0.0f, -2.0f), vec3(2.0f, 4.0f, 2.0f));
+
+
+int frame = 0;
+int timebase = 0;
+float fps = 0;
 
 void onMenuCb(int value)
 {
@@ -257,7 +264,7 @@ vec3 vortexForce( vec3 p )
 	vec2 f( p.x, p.z );
 	float r = glm::length( f );
 	f = glm::normalize( f );
-	vec3 F = 2.0f/(r+0.001f)*vec3( -f.y, 0, f.x );
+	vec3 F = 1.0f/(r+0.001f)*vec3( -f.y, 0, f.x );
 	return vec3( 0, -9.8, 0 ) + F;
 }
 
@@ -265,13 +272,27 @@ void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	char title[100];
-	sprintf( title, "SPH frame: %d, #particles: %d", theFluid.frame, theFluid.getParticles().size() ); 
+	
+	frame++;
+	int time=glutGet(GLUT_ELAPSED_TIME);
+
+	if (time - timebase > 1000) {
+		fps = frame*1000.0f/(time-timebase);
+	 	timebase = time;
+		frame = 0;
+	}
+	
+	sprintf_s( title, 100, "%0.2f FPS, SPH frame: %d, #particles: %d", 
+		fps,
+		theFluid.frame, 
+		theFluid.getParticles().size() ); 
 	glutSetWindowTitle( title );
+
 	if( play || singleStep )
 	{
-		force_t externalForce = gravity ? vortexForce : noForce;
+		force_t externalForce = gravity ? gravityForce : noForce;
 		singleStep = false;
-		theFluid.Update(0.004, externalForce);
+		theFluid.Update(0.004f, externalForce);
 	}
 	if( displayOn )
 	{
