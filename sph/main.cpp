@@ -48,6 +48,9 @@ void mouseClick_cb(int, int, int, int);
 Display display;
 Fluid theFluid(vec3(-2.0f, 0.0f, -2.0f), vec3(2.0f, 4.0f, 2.0f));
 
+int frame = 0;
+int timebase = 0;
+float fps = 0;
 
 int main(int argc, char** argv) 
 {
@@ -229,8 +232,22 @@ void display_cb() {
 	//Always and only do this at the start of a frame, it wipes the slate clean
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	char title[100];
-	sprintf_s( title, 100, "SPH frame: %d, #particles: %d", theFluid.frame, theFluid.getParticles().size() ); 
+	
+	frame++;
+	int time=glutGet(GLUT_ELAPSED_TIME);
+
+	if (time - timebase > 1000) {
+		fps = frame*1000.0f/(time-timebase);
+	 	timebase = time;
+		frame = 0;
+	}
+	
+	sprintf_s( title, 100, "%0.2f FPS, SPH frame: %d, #particles: %d", 
+		fps,
+		theFluid.frame, 
+		theFluid.getParticles().size() ); 
 	glutSetWindowTitle( title );
+
 	if( play || singleStep )
 	{
 		force_t externalForce = gravity ? gravityForce : noForce;

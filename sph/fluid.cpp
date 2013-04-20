@@ -405,10 +405,10 @@ void Fluid::Update(float dt, force_t externalForce)
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 3000 && frame % 4 == 0) {
-		//addFluid(dt);
+		addFluid(dt);
 		//addMultiFluid();
 		//addLavaLamp(); 
-		if( frame == 0 )
+		if( frame == -1 )
 		{
 			for( float y = 0; y < 3; y += 0.07f )
 			{
