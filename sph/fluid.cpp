@@ -27,7 +27,7 @@ const bool useMultiFluidCalcs = true;
 const bool loadFromMesh = !true; 
 
 //Container size
-/*
+//*
 const vec3 containerMin(-1.0, 0, -1.0);
 const vec3 containerMax(1.0, 4, 1.0);
 /*/
@@ -318,6 +318,7 @@ void Fluid::addLavaLamp()
 					theParticles.push_back(p);
 					p->setIndex(2);
 					p->setTemp(5.f); 
+					p->setCi(-0.5); 
 					Box * box = container( pos );
 					if( box->frame < frame )
 					{
@@ -329,7 +330,7 @@ void Fluid::addLavaLamp()
 			}
 		}
 		//Add blue fluid at the top (it will sink)
-		for( float y = 1; y < 1.8; y += 0.07 )
+		for( float y = 0.556; y < 1.8; y += 0.07 )
 		{
 			for( float x = -0.4; x < 0.4; x += 0.07 )
 			{
@@ -408,12 +409,13 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, force_t externalForce)
 {
+	externalForce = vec3(0, -9.8, 0); 
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 10000 && frame % 4 == 0) {
-		addFluid(dt);
+		//addFluid(dt);
 		//addMultiFluid();
-		//addLavaLamp(); 
+		addLavaLamp(); 
 		if( frame == -1 )
 		{
 			for( float y = 0; y < 1; y += 0.07 )
@@ -467,7 +469,7 @@ void Fluid::Update(float dt, force_t externalForce)
 	findNeighbors();
 	//Additional computations for multiple fluid interaction
 	if (useMultiFluidCalcs) {
-		//computeDiffusion(dt); 
+		computeDiffusion(dt); 
 		//manageAirBubbles();
 	}
 

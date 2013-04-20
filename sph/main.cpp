@@ -47,7 +47,17 @@ void mouseClick_cb(int, int, int, int);
 
 Display display;
 Fluid theFluid;
+int theMenu = 0;
 
+
+void onMenuCb(int value)
+{
+   switch (value)
+   {
+   case -1: exit(0);
+   default: keypress_cb(value, 0, 0); break;
+   }
+}
 
 int main(int argc, char** argv) 
 {
@@ -57,6 +67,30 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	glutCreateWindow("SPH");
+
+	//Window for controls (middle mouse click)
+	int subMenu1 = glutCreateMenu(onMenuCb);
+    glutAddMenuEntry("Pause/Resume    =", '=');
+    glutAddMenuEntry("Single step     .", '.');
+    glutAddMenuEntry("Display on/off  d", 'd');
+	glutAddMenuEntry("Record          r", 'r');
+
+    int subMenu2 = glutCreateMenu(onMenuCb);
+    glutAddMenuEntry("Toggle color         t", 't');
+    glutAddMenuEntry("Raymarch on/off      m", 'm');
+	glutAddMenuEntry("Toggle fluids on/off 4", '4'); 
+
+	int subMenu3 = glutCreateMenu(onMenuCb); 
+	glutAddMenuEntry("Gravity on/off    g", 'g');
+
+    theMenu = glutCreateMenu(onMenuCb);
+    glutAddMenuEntry("Start    >", '>');
+    glutAddSubMenu("Play Controls", subMenu1);
+    glutAddSubMenu("Display Controls", subMenu2);
+	glutAddSubMenu("Simulation Controls", subMenu3);
+    glutAddMenuEntry("_________________", -1);
+    glutAddMenuEntry("Exit", 27);
+    glutAttachMenu(GLUT_MIDDLE_BUTTON);
 
 	display.init();
 	display.setFluids(&theFluid); 
@@ -81,6 +115,8 @@ int main(int argc, char** argv)
 	return 0;
 }
 
+
+
 void mouseClick_cb(int button, int state, int x, int y)
 {
 	if( state == GLUT_DOWN )
@@ -93,7 +129,7 @@ void mouseClick_cb(int button, int state, int x, int y)
 		else if( button == 4 )
 		{
 			display.zoomCamera( -10 );
-		}
+		} 
 	}
 	display.updateCamera();
 	old_X = x;

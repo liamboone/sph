@@ -21,7 +21,7 @@ Particle::Particle(float den, float m, glm::vec3 pos, glm::vec3 vel)
 	cpGrad = glm::vec3(0.0); 
 	cs = 1; 
 	cp = 1;
-	ci = 1; 
+	ci = 0.5; 
 }
 
 Particle::~Particle(void)
