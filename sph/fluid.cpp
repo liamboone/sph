@@ -321,7 +321,7 @@ void Fluid::addLavaLamp()
 					vec3 pos(x+rx, y+ry, z+rz);
 					//TODO - mass freaks out when its 0.012 like they give in the paper!!! :(
 					//Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0));
-					Particle* p = new Particle(375, mass-0.05, pos, glm::vec3(0)); 
+					Particle* p = new Particle(375, mass-0.05f, pos, glm::vec3(0)); 
 					theParticles.push_back(p);
 					p->setIndex(2);
 					p->setTemp(5.f); 
@@ -338,11 +338,11 @@ void Fluid::addLavaLamp()
 			}
 		}
 		//Add blue fluid at the top (it will sink)
-		for( float y = 0.556; y < 1.4; y += 0.07 )
+		for( float y = 0.556f; y < 1.4f; y += 0.07f )
 		{
-			for( float x = containerMin.x + 0.15; x <containerMax.x-0.15; x += 0.07f )
+			for( float x = containerMin.x + 0.15f; x <containerMax.x-0.15f; x += 0.07f )
 			{
-				for( float z = containerMin.z + 0.15; z < containerMax.z-0.15; z += 0.07f )
+				for( float z = containerMin.z + 0.15f; z < containerMax.z-0.15f; z += 0.07f )
 				{
 					float rx = 0.01f*(float)rand() / RAND_MAX;
 					float ry = 0.01f*(float)rand() / RAND_MAX;
@@ -351,7 +351,7 @@ void Fluid::addLavaLamp()
 					//was 0.006
 					//TODO - figure out if we just wanna use the defaults or if we want to change other params
 					/*Particle * p = new Particle(restDensity+200, mass, pos, glm::vec3(0));*/
-					Particle * p = new Particle(1200, mass+0.05, pos, glm::vec3(0));
+					Particle * p = new Particle(1200, mass+0.05f, pos, glm::vec3(0));
 					theParticles.push_back(p);
 					p->setIndex(1);
 					p->setTemp(15.f); 
@@ -371,15 +371,15 @@ void Fluid::addLavaLamp()
 
 	//Heat to the bottom & cool down the top
 	if (frame < 500) {
-		float max = containerMax.y - 0.5; 
-		float min = containerMin.y + 0.3; 
-		for (int i = 0; i < theParticles.size(); i++)
+		float max = containerMax.y - 0.5f; 
+		float min = containerMin.y + 0.3f; 
+		for (unsigned int i = 0; i < theParticles.size(); i++)
 		{
 			glm::vec3 pos = theParticles.at(i)->getPosition();
 			if (pos.y < min) {
-				theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() + 0.5);
+				theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() + 0.5f);
 			} else if (theParticles.at(i)->getPosition().y > max) {
-				theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() - 0.5);
+				theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() - 0.5f);
 			}
 		}
 	}
