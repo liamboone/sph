@@ -48,6 +48,7 @@ public:
 	glm::vec3 computeViscosity(float dt, int i); 
 	glm::vec3 computeSurfaceTension(float dt, int i); 
 	void computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, glm::vec3 &surfaceForce);
+	void computeDiffusionSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, glm::vec3 &surfaceForce, float dt);
 	void computeForces(float dt, force_t externalForce);
 
 	//Position & velocity integration

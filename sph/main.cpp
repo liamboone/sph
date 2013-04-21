@@ -50,7 +50,7 @@ Display display;
 //Fluid theFluid;
 int theMenu = 0;
 
-Fluid theFluid(vec3(-2.0f, 0.0f, -2.0f), vec3(2.0f, 4.0f, 2.0f));
+Fluid theFluid(vec3(-0.5f, 0.0f, -0.50f), vec3(0.5f, 1.5f, 0.50f));
 
 
 int frame = 0;
@@ -83,7 +83,8 @@ int main(int argc, char** argv)
 	glutAddMenuEntry("Record          r", 'r');
 
     int subMenu2 = glutCreateMenu(onMenuCb);
-    glutAddMenuEntry("Toggle color         t", 't');
+    glutAddMenuEntry("Color by temperature t", 't');
+	glutAddMenuEntry("Color by velocity    v", 't');
     glutAddMenuEntry("Raymarch on/off      m", 'm');
 	glutAddMenuEntry("Toggle fluids on/off 4", '4'); 
 
