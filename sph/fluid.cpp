@@ -366,22 +366,6 @@ void Fluid::addLavaLamp()
 				}
 			}
 		}
-
-	}
-
-	//Heat to the bottom & cool down the top
-	if (frame < 500) {
-		float max = containerMax.y - 0.5f; 
-		float min = containerMin.y + 0.3f; 
-		for (unsigned int i = 0; i < theParticles.size(); i++)
-		{
-			glm::vec3 pos = theParticles.at(i)->getPosition();
-			if (pos.y < min) {
-				theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() + 0.5f);
-			} else if (theParticles.at(i)->getPosition().y > max) {
-				theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() - 0.5f);
-			}
-		}
 	}
 }
 
@@ -397,7 +381,7 @@ void Fluid::addFluid(float dt)
 			float ry = 0.01f*((float) rand() / (RAND_MAX)); 
 			float rz = 0.01f*((float) rand() / (RAND_MAX)); 
 			
-			vec3 pos(rx+1, y+ry+1, z+rz);
+			vec3 pos(rx+containerMax.x, y+ry+containerMax.y/2, z+rz);
 			//Density, mass, position, velocity (particle inputs)
 			Particle * p = new Particle(restDensity, mass, pos, glm::vec3(-3, 0, 0.0));
 			p->setIndex(1); 
@@ -420,49 +404,27 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, force_t externalForce)
 {
-    addLavaLamp(); 
+    //addLavaLamp(); 
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
 	} else if (loadFromMesh == false && theParticles.size() < 3000 && frame % 4 == 0) {
-		//addFluid(dt);
+		addFluid(dt);
 		//addMultiFluid();
-		if( frame == -1 )
+		if( frame == 0 )
 		{
-			for( float y = 0; y < 3; y += 0.07f )
+			for( float y = 0; y < 0.4; y += 0.07f )
 			{
-				for( float x = containerMin.x; x < containerMin.x/3; x += 0.07f )
+				for( float x = containerMin.x; x < containerMax.x; x += 0.07f )
 				{
-					for( float z = containerMin.z; z < containerMin.z/3; z += 0.07f )
+					for( float z = containerMin.z; z < containerMax.z; z += 0.07f )
 					{
 						float rx = 0.01f*(float)rand() / RAND_MAX; 
 						float ry = 0.01f*(float)rand() / RAND_MAX; 
 						float rz = 0.01f*(float)rand() / RAND_MAX; 
 						vec3 pos(x+rx, y+ry, z+rz);
 						Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0));
-						p->setIndex(1); 
-						theParticles.push_back(p);
-						Box * box = container( pos );
-						if( box->frame < frame )
-						{
-							box->particles.clear();
-							box->frame = frame;
-						}
-						box->particles.push_back( p );
-					}
-				}
-			}
-			for( float y = 0; y < 3; y += 0.07f )
-			{
-				for( float x = containerMax.x/3; x < containerMax.x; x += 0.07f )
-				{
-					for( float z = containerMax.z/3; z < containerMax.z; z += 0.07f )
-					{
-						float rx = 0.01f*(float)rand() / RAND_MAX; 
-						float ry = 0.01f*(float)rand() / RAND_MAX; 
-						float rz = 0.01f*(float)rand() / RAND_MAX; 
-						vec3 pos(x+rx, y+ry, z+rz);
-						Particle * p = new Particle(restDensity+200, mass, pos, glm::vec3(0));
-						p->setIndex(2);
+						p->setIndex(2); 
+						p->setCi(-0.5); 
 						theParticles.push_back(p);
 						Box * box = container( pos );
 						if( box->frame < frame )
@@ -477,11 +439,6 @@ void Fluid::Update(float dt, force_t externalForce)
 		}
 	}
 	findNeighbors();
-	//Additional computations for multiple fluid interaction
-	if (useMultiFluidCalcs) {
-		//computeDiffusion(dt); 
-		//manageAirBubbles();
-	}
 
 	computeDensity(dt);
 	computeForces(dt, externalForce);
@@ -688,67 +645,67 @@ void Fluid::computeSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, 
 }
 
 
-void Fluid::computeDiffusionSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, glm::vec3 &surfaceForce, float dt)
-{
-	//Interface
-	glm::vec3 ni(0.0);
-	float ki = 0.0f; 
-	//Surface
-	glm::vec3 n(0.0); 
-    float k = 0.0f; 
-	//Cp 
-	glm::vec3 nCp(0.0); 
-
-	//Diffusion
-	float c = 0.0001f; 
-	float deltaTemp = 0.f;
-
-	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
-	for (unsigned int j = 0; j < neighbors.size(); j++)
-	{
-		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
-		float mass = neighbors.at(j)->getMass(); 
-		//Cs should be 0 for air particles & 1 for liquids
-		float denInv = theParticles.at(i)->getCs() / (neighbors.at(j)->getDensity() + 1e-15f); 
-		glm::vec3 poly6Grad = wPoly6Grad(r, h);
-		float poly6Lap = wPoly6Lap(r, h); 
-
-		//Surface force - TODO - set to 0 if air (its 1 now)
-		n += mass * denInv *  poly6Grad;
-
-
-		//Cp stored for air particles
-		nCp += mass * 1.f / (neighbors.at(j)->getDensity() + 1e-15f) * poly6Grad;
-		
-		//Interface force
-		ni += mass * neighbors.at(j)->getCi() * denInv * poly6Grad;
-		ki += mass * neighbors.at(j)->getCi() * denInv * poly6Lap; 
-
-		//Diffusion
-		float num = neighbors.at(j)->getTemp() - theParticles.at(i)->getTemp(); 
-		float avgTemp = num / (neighbors.at(j)->getDensity() + 1e-15f); 
-		deltaTemp += mass * avgTemp * poly6Lap; 
-	}
-
-	//The normal is the gradient of cs.  Store it to use in bubble creation
-	theParticles.at(i)->setCsGrad(n); 
-	theParticles.at(i)->setCpGrad(nCp); 
-
-	k = -k / (glm::length(n) + 1e-15f); 
-	n =  n / (glm::length(n) + 1e-15f);
-	surfaceForce = sigma * k * n; 
-
-	//TODO - should we be normalizing k? 
-	ni = ni / (glm::length(ni) + 1e-15f); 
-	interfaceForce = -sigmaI * ki * ni; 
-
-	//Diffusion
-	//Euler integration for change
-	//theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() + c * deltaTemp * dt); 
-
-	//Rest Density = alpha / temp
-	//theParticles.at(i)->setRestDensity(10000.f / (theParticles.at(i)->getTemp() + 1e-15f)); 
-}
+//void Fluid::computeDiffusionSurfaceAndInterfaceTension(int i, glm::vec3 &interfaceForce, glm::vec3 &surfaceForce, float dt)
+//{
+//	//Interface
+//	glm::vec3 ni(0.0);
+//	float ki = 0.0f; 
+//	//Surface
+//	glm::vec3 n(0.0); 
+//    float k = 0.0f; 
+//	//Cp 
+//	glm::vec3 nCp(0.0); 
+//
+//	//Diffusion
+//	float c = 0.0001f; 
+//	float deltaTemp = 0.f;
+//
+//	std::vector<Particle*> neighbors = theParticles.at(i)->getNeighbors();
+//	for (unsigned int j = 0; j < neighbors.size(); j++)
+//	{
+//		glm::vec3 r = theParticles.at(i)->getPosition() - neighbors.at(j)->getPosition();
+//		float mass = neighbors.at(j)->getMass(); 
+//		//Cs should be 0 for air particles & 1 for liquids
+//		float denInv = theParticles.at(i)->getCs() / (neighbors.at(j)->getDensity() + 1e-15f); 
+//		glm::vec3 poly6Grad = wPoly6Grad(r, h);
+//		float poly6Lap = wPoly6Lap(r, h); 
+//
+//		//Surface force - TODO - set to 0 if air (its 1 now)
+//		n += mass * denInv *  poly6Grad;
+//
+//
+//		//Cp stored for air particles
+//		nCp += mass * 1.f / (neighbors.at(j)->getDensity() + 1e-15f) * poly6Grad;
+//		
+//		//Interface force
+//		ni += mass * neighbors.at(j)->getCi() * denInv * poly6Grad;
+//		ki += mass * neighbors.at(j)->getCi() * denInv * poly6Lap; 
+//
+//		//Diffusion
+//		float num = neighbors.at(j)->getTemp() - theParticles.at(i)->getTemp(); 
+//		float avgTemp = num / (neighbors.at(j)->getDensity() + 1e-15f); 
+//		deltaTemp += mass * avgTemp * poly6Lap; 
+//	}
+//
+//	//The normal is the gradient of cs.  Store it to use in bubble creation
+//	theParticles.at(i)->setCsGrad(n); 
+//	theParticles.at(i)->setCpGrad(nCp); 
+//
+//	k = -k / (glm::length(n) + 1e-15f); 
+//	n =  n / (glm::length(n) + 1e-15f);
+//	surfaceForce = sigma * k * n; 
+//
+//	//TODO - should we be normalizing k? 
+//	ni = ni / (glm::length(ni) + 1e-15f); 
+//	interfaceForce = -sigmaI * ki * ni; 
+//
+//	//Diffusion
+//	//Euler integration for change
+//	//theParticles.at(i)->setTemp(theParticles.at(i)->getTemp() + c * deltaTemp * dt); 
+//
+//	//Rest Density = alpha / temp
+//	//theParticles.at(i)->setRestDensity(10000.f / (theParticles.at(i)->getTemp() + 1e-15f)); 
+//}
 
 void Fluid::computeForces(float dt, force_t externalForce)
 {
@@ -766,8 +723,8 @@ void Fluid::computeForces(float dt, force_t externalForce)
 			glm::vec3 interfaceForce; 
 			glm::vec3 surfaceTension;
 			
-			computeDiffusionSurfaceAndInterfaceTension(i, interfaceForce, surfaceTension, dt);
-			//computeSurfaceAndInterfaceTension(i, interfaceForce, surfaceTension);
+			//computeDiffusionSurfaceAndInterfaceTension(i, interfaceForce, surfaceTension, dt);
+			computeSurfaceAndInterfaceTension(i, interfaceForce, surfaceTension);
 			//glm::vec3 buoyancy = computeArtificialBuoyancy(i); 
 			finalForce = pressureForce + theParticles.at(i)->getDensity()*externalForces + viscosityForce + surfaceTension + interfaceForce; 
 		}
@@ -871,7 +828,7 @@ void Fluid::resolveCollisions()
 	}
 }
 
-//********************************************************************************************
+/********************************************************************************************
 //Multiple fluid functions
 //********************************************************************************************
 void  Fluid::computeDiffusion(float dt)
@@ -948,7 +905,7 @@ void  Fluid::manageAirBubbles()
 	}
 
 }
-
+*/
 
 //********************************************************************************************
 //Kernal functions

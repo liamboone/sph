@@ -132,11 +132,11 @@ void mouseClick_cb(int button, int state, int x, int y)
 		buttonPress = button;
 		if( button == 3 )
 		{
-			display.zoomCamera( 10 );
+			display.zoomCamera( -10 );
 		}
 		else if( button == 4 )
 		{
-			display.zoomCamera( -10 );
+			display.zoomCamera( 10 );
 		} 
 	}
 	display.updateCamera();
