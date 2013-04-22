@@ -309,7 +309,7 @@ void Fluid::addLavaLamp()
 {
 	if (frame == 0) {
 		//Add red fluid (this will start at the bottom & rise) 
-		for( float y = 0.0f; y < 0.55f; y += 0.07f )
+		for( float y = 0.0f; y < 1.22f; y += 0.07f )
 		{
 			for( float x = containerMin.x; x < containerMax.x; x += 0.07f )
 			{
@@ -338,7 +338,7 @@ void Fluid::addLavaLamp()
 			}
 		}
 		//Add blue fluid at the top (it will sink)
-		for( float y = 0.556f; y < 1.4f; y += 0.07f )
+		for( float y = 1.246f; y < 2.0f; y += 0.07f )
 		{
 			for( float x = containerMin.x + 0.15f; x <containerMax.x-0.15f; x += 0.07f )
 			{
@@ -383,7 +383,7 @@ void Fluid::addFluid(float dt)
 			
 			vec3 pos(rx+containerMax.x, y+ry+containerMax.y/2, z+rz);
 			//Density, mass, position, velocity (particle inputs)
-			Particle * p = new Particle(restDensity, mass, pos, glm::vec3(-3, 0, 0.0));
+			Particle * p = new Particle(restDensity-200.f, mass, pos, glm::vec3(-3, 0, 0.0));
 			p->setIndex(1); 
 			theParticles.push_back(p);
 			Box * box = container( pos );
@@ -404,15 +404,15 @@ void Fluid::addFluid(float dt)
 //Calls all the SPH fns
 void Fluid::Update(float dt, force_t externalForce)
 {
-    //addLavaLamp(); 
+    addLavaLamp(); 
 	if (loadFromMesh == true && frame == 0) {
 		createParticlesFromMesh();
-	} else if (loadFromMesh == false && theParticles.size() < 3000 && frame % 4 == 0) {
-		addFluid(dt);
+	} else if (loadFromMesh == false && theParticles.size() < 500000 && frame % 4 == 0) {
+		//addFluid(dt);
 		//addMultiFluid();
-		if( frame == 0 )
+		if( frame == -1 )
 		{
-			for( float y = 0; y < 0.4; y += 0.07f )
+			for( float y = 0; y < 0.3; y += 0.07f )
 			{
 				for( float x = containerMin.x; x < containerMax.x; x += 0.07f )
 				{
@@ -422,7 +422,7 @@ void Fluid::Update(float dt, force_t externalForce)
 						float ry = 0.01f*(float)rand() / RAND_MAX; 
 						float rz = 0.01f*(float)rand() / RAND_MAX; 
 						vec3 pos(x+rx, y+ry, z+rz);
-						Particle * p = new Particle(restDensity-200, mass, pos, glm::vec3(0));
+						Particle * p = new Particle(restDensity+200.f, mass, pos, glm::vec3(0));
 						p->setIndex(2); 
 						p->setCi(-0.5); 
 						theParticles.push_back(p);

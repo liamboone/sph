@@ -50,7 +50,7 @@ Display display;
 //Fluid theFluid;
 int theMenu = 0;
 
-Fluid theFluid(vec3(-0.5f, 0.0f, -0.50f), vec3(0.5f, 1.5f, 0.50f));
+Fluid theFluid(vec3(-2.75f, 0.0f, -2.750f), vec3(2.75f, 4.3f, 2.750f));
 
 
 int frame = 0;
