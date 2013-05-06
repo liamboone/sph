@@ -20,14 +20,20 @@
 #include <IL/ilu.h>
 #include <IL/ilut.h>
 
+#include <iostream>
+#include <fstream>
+
 using namespace glm;
 
 
 int theFrameNum = 0; 
 bool isRecording = false;
+bool writeToFile = false; 
+ofstream myfile;
 bool displayOn = true;
 bool useRaymarch = false;
 bool gravity = true;
+bool vorticity = false; 
 
 int buttonPress;
 int old_X;
@@ -50,7 +56,11 @@ Display display;
 //Fluid theFluid;
 int theMenu = 0;
 
-Fluid theFluid(vec3(-2.75f, 0.0f, -2.750f), vec3(2.75f, 4.3f, 2.750f));
+
+Fluid theFluid(vec3(-1.5f, 0.0f, -1.5f), vec3(1.5f, 5.3f, 1.5f));
+
+//Fluid theFluid(vec3(-0.5f, 0.0f, -0.5f), vec3(0.5f, 1.0f, 0.5f));
+
 
 
 int frame = 0;
@@ -120,6 +130,8 @@ int main(int argc, char** argv)
 
 	//Start it off
 	glutMainLoop();
+	//Close file if we are writing to txt 
+	if (writeToFile) myfile.close(); 
 	return 0;
 }
 
@@ -198,6 +210,13 @@ void keypress_cb(unsigned char key, int x, int y) {
 	case 'g':
 		gravity = !gravity;
 		break;
+	case 's':
+		vorticity = !vorticity; 
+		gravity = !gravity; 
+		break;
+	case 'w':
+		writeToFile = !writeToFile; 
+		break;
 	case '1':
 	case '2':
 	case '3':
@@ -206,6 +225,7 @@ void keypress_cb(unsigned char key, int x, int y) {
 		displayFlags ^= 1 << ord;
 		display.setFlags( displayFlags );
 		break;
+
 	}
 	glutPostRedisplay();
 }
@@ -250,6 +270,47 @@ void grabScreen()
     assert(error == IL_NO_ERROR);
 }
 
+//Stores position for each frame for rendering in maya
+void writeToText()
+{
+
+	if (myfile.is_open()) {
+		myfile<<theFluid.frame;
+		myfile<<"\n";
+
+		myfile<<theFluid.getParticles().size();
+		myfile<<"\n";
+		for (int i = 0; i < theFluid.getParticles().size(); i++) {
+			myfile<<theFluid.getParticles().at(i)->getIndex(); 
+			myfile<<" "; 
+			myfile<<theFluid.getParticles().at(i)->getPosition().x; 
+			myfile<<" "; 
+			myfile<<theFluid.getParticles().at(i)->getPosition().y;
+			myfile<<" "; 
+			myfile<<theFluid.getParticles().at(i)->getPosition().z; 
+			myfile<<" "; 
+		}
+		myfile<<"\n";
+	} else {		
+		myfile.open ("mayaImport.txt");
+		myfile<<theFluid.frame;
+		myfile<<"\n";
+		myfile<<theFluid.getParticles().size();
+		myfile<<"\n";
+		for (int i = 0; i < theFluid.getParticles().size(); i++) {
+		    myfile<<theFluid.getParticles().at(i)->getIndex(); 
+			myfile<<" "; 
+			myfile<<theFluid.getParticles().at(i)->getPosition().x; 
+			myfile<<" "; 
+			myfile<<theFluid.getParticles().at(i)->getPosition().y;
+			myfile<<" "; 
+			myfile<<theFluid.getParticles().at(i)->getPosition().z; 
+			myfile<<" "; 
+		}
+		myfile<<"\n";
+	}
+}
+
 vec3 gravityForce( vec3 p )
 {
 	return vec3( 0, -9.81, 0 );
@@ -291,7 +352,13 @@ void display_cb() {
 
 	if( play || singleStep )
 	{
-		force_t externalForce = gravity ? gravityForce : noForce;
+		force_t externalForce;
+		if (vorticity )
+		{
+			externalForce = vortexForce; 
+		} else {
+			externalForce = gravity ? gravityForce : noForce;
+		}
 		singleStep = false;
 		theFluid.Update(0.004f, externalForce);
 	}
@@ -303,6 +370,7 @@ void display_cb() {
 			display.draw();
 	}
 	if (isRecording) grabScreen(); 
+	if (writeToFile) writeToText();
 	glutSwapBuffers();
 }
 

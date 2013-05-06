@@ -27,6 +27,7 @@ public:
 	//************************************************************************************************
 	//Initialize fluid from some point
 	void addFluid(float dt);
+	void addHeavyFluid(float dt);
 
 	//Test functions to draw two different liquids 
 	void addMultiFluid(); //Pours fluids of two densities together 

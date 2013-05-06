@@ -31,6 +31,7 @@ char* Display::textFileRead(const char* fileName) {
 	
     return text;
 }
+
 void Display::printLinkInfoLog(int prog) 
 {
 	int infoLogLen = 0;
@@ -412,6 +413,9 @@ void Display::march()
 	{
 		vec3 P = (particles.at(pid)->getPosition()-cMin)/span;
 
+		if(!(particles.at(pid)->getIndex() & flags))
+			continue;
+
 		float x = P.x;
 		float y = P.y;
 		float z = P.z;
@@ -456,6 +460,8 @@ void Display::march()
 	}
 
 	float * texels = new float[ DMAP_SIZE*DMAP_SIZE*DMAP_SIZE*4 ];
+
+	#pragma omp parallel for
 	for( int i = 0; i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE*4; i +=4 )
 	{
 		texels[i] = 0.25;
@@ -464,10 +470,22 @@ void Display::march()
 		texels[i+3] = 0;
 	}
 
-	std::map<int,bool>::iterator it;
-	for( it = toCalc.begin(); it != toCalc.end(); ++ it )
+	//make an array of indices.
+    int loop_length = toCalc.size();
+    int * loop_array = new int[ loop_length ];
+
+    std::map<int,bool>::iterator it = toCalc.begin();
+	for (int j = 0; it != toCalc.end(); j++)
 	{
-		int i = it->first;
+		loop_array[j] = it->first;
+		it++;
+	}
+
+    // now you can use OpenMP as usual:
+#pragma omp parallel for
+	for( int itidx = 0; itidx <= loop_length; itidx++ )
+	{
+		int i = loop_array[itidx];
 		if( i >= 0 && i < DMAP_SIZE*DMAP_SIZE*DMAP_SIZE )
 		{
 			float x = (float)( (i)%DMAP_SIZE ) / (float)(DMAP_SIZE-1) * span.x + cMin.x;
@@ -482,7 +500,8 @@ void Display::march()
 	}
 
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, DMAP_SIZE, DMAP_SIZE, DMAP_SIZE, 0, GL_RGBA, GL_FLOAT, texels);
-	delete texels;
+	delete[] texels;
+	delete[] loop_array;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//tip the dominoes
